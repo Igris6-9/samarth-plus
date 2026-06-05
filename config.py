@@ -7,15 +7,19 @@ load_dotenv()
 def _get_db_uri():
     """
     Smart DB URI resolver:
-    1. DATABASE_URL env var (Postgres for production) — highest priority
-    2. Vercel serverless: /tmp folder (only writable dir on Vercel)
-    3. Local dev: instance/ folder (SQLite)
+    1. DATABASE_URL env var (Neon PostgreSQL) — highest priority
+    2. Vercel serverless: /tmp folder SQLite
+    3. Local dev: instance/ folder SQLite
     """
     if os.environ.get('DATABASE_URL'):
         url = os.environ.get('DATABASE_URL')
         # Fix for older postgres:// URLs -> postgresql://
         if url.startswith('postgres://'):
             url = url.replace('postgres://', 'postgresql://', 1)
+        # Neon requires SSL — add if not already present
+        if 'sslmode' not in url and 'neon.tech' in url:
+            url += '?sslmode=require'
+        print(f">> [DATABASE]: Using PostgreSQL (Neon) ✅")
         return url
 
     if os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'):
@@ -27,6 +31,7 @@ def _get_db_uri():
     instance_dir = os.path.join(base_dir, 'instance')
     os.makedirs(instance_dir, exist_ok=True)
     return 'sqlite:///' + os.path.join(instance_dir, 'samarth_v2.db').replace('\\', '/')
+
 
 
 class Config:
@@ -45,11 +50,18 @@ class Config:
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     SQLALCHEMY_DATABASE_URI = _get_db_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # Prevent SQLAlchemy connection pool issues on serverless
+    # ✅ Neon PostgreSQL + Vercel serverless optimized pool settings
     SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_pre_ping": True,
-        "pool_recycle": 280,
+        "pool_pre_ping": True,       # Test connection before use
+        "pool_recycle": 280,         # Recycle before Neon's 300s timeout
+        "pool_size": 1,              # Serverless: keep pool tiny
+        "max_overflow": 2,
+        "connect_args": {
+            "connect_timeout": 10,
+            "sslmode": "require"     # Neon requires SSL
+        } if os.environ.get('DATABASE_URL') and 'neon.tech' in os.environ.get('DATABASE_URL', '') else {}
     }
+
 
     # 🚀 APP SETTINGS
     DEBUG = os.environ.get('DEBUG', 'True') == 'True'
