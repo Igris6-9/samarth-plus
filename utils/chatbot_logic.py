@@ -22,7 +22,9 @@ def clean_chemistry_text(text: str) -> str:
     return text
 
 # 👑 DAKASH ENGINE - HYBRID AI MENTOR CONFIGURATION (GEMINI EDITION)
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
+# Try both env sources (Vercel sets them directly without .env)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = "gemini-1.5-flash"
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
@@ -88,7 +90,7 @@ def get_ai_response(user_input):
 
         # Initialize the model with system instruction
         model = genai.GenerativeModel(
-            model_name="gemini-flash-lite-latest",
+            model_name=GEMINI_MODEL,
             system_instruction=SYSTEM_PROMPT
         )
         

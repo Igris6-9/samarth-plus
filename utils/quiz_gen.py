@@ -9,9 +9,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 👑 DAKASH ENGINE - HYBRID QUIZ CORE (GEMINI UPGRADE)
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Try both env sources (Vercel sets them directly without .env)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
+
+# ✅ Correct model name (gemini-1.5-flash = fast + free tier)
+GEMINI_MODEL = "gemini-1.5-flash"
 
 def clean_response_text(text: str) -> str:
     # Removes raw math dollar signs and handles technical symbols
@@ -452,7 +456,7 @@ def generate_cbse_quiz(subject, difficulty, class_level="10", exam_track=None, c
             raise ValueError("GEMINI_API_KEY is not set")
 
         # Configure Gemini JSON Mode
-        model = genai.GenerativeModel('gemini-flash-lite-latest')
+        model = genai.GenerativeModel(GEMINI_MODEL)
         response = model.generate_content(
             prompt,
             generation_config=genai.GenerationConfig(

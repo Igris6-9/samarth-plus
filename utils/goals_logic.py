@@ -74,7 +74,7 @@ def analyze_goals_with_ai(goals_list, api_key):
 
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-flash-lite-latest')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         # PC/Mobile Optimized Formatting in Prompt
         prompt = f"""

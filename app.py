@@ -188,12 +188,20 @@ def create_app():
                 if len(solved_history) > 50:
                     solved_history = solved_history[-50:]
                 session['user_solved_history'] = solved_history
-                # Cache active quiz structure to server-side JSON file to avoid cookie size bloat
+                # Cache active quiz — use /tmp on Vercel (only writable dir), instance/ locally
                 import json
-                cache_dir = os.path.join(app.config['BASE_DIR'], 'instance', 'quiz_cache')
-                os.makedirs(cache_dir, exist_ok=True)
-                with open(os.path.join(cache_dir, f"active_quiz_{current_user.id}.json"), 'w', encoding='utf-8') as f:
-                    json.dump(quiz_data, f)
+                import tempfile
+                if os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'):
+                    cache_dir = '/tmp/quiz_cache'
+                else:
+                    cache_dir = os.path.join(app.config['BASE_DIR'], 'instance', 'quiz_cache')
+                try:
+                    os.makedirs(cache_dir, exist_ok=True)
+                    with open(os.path.join(cache_dir, f"active_quiz_{current_user.id}.json"), 'w', encoding='utf-8') as f:
+                        json.dump(quiz_data, f)
+                except OSError:
+                    # If filesystem write fails, store in session directly (fallback)
+                    session['active_quiz_data'] = quiz_data
                 
                 session['active_quiz_subject'] = subject
                 session.modified = True

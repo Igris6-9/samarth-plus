@@ -51,7 +51,7 @@ def generate_ai_timetable(user_data):
             raise ValueError("GEMINI_API_KEY is not set")
 
         # Configure Gemini JSON Mode
-        model = genai.GenerativeModel('gemini-flash-lite-latest')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(
             prompt,
             generation_config=genai.GenerationConfig(

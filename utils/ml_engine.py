@@ -36,7 +36,7 @@ class DakashPredictor:
             if not GEMINI_API_KEY:
                 raise ValueError("GEMINI_API_KEY is not set")
             
-            model = genai.GenerativeModel('gemini-flash-lite-latest')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(prompt)
             return response.text.strip()
         except:
