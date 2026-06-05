@@ -18,8 +18,15 @@ from utils.practice_gen import generate_practice_paper
 from utils.timetable_gen import generate_ai_timetable
 
 def create_app():
-    app = Flask(__name__)
+    # 🛸 Explicit static path for Vercel compatibility
+    import os as _os
+    _base = _os.path.abspath(_os.path.dirname(__file__))
+    app = Flask(__name__,
+                static_folder=_os.path.join(_base, 'static'),
+                static_url_path='/static')
     app.config.from_object(Config)
+    # Force Vercel to always serve fresh CSS/JS
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
     # 🏗️ NEURAL DATABASE SYNC
     db.init_app(app)
