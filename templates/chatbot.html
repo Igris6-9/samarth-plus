@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 🤖 HYBRID AI INTERFACE OPTIMIZATION */
+    .chat-wrapper {
+        max-width: 1100px;
+        margin: 0 auto;
+        animation: fadeIn 0.8s ease-out;
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    .chat-container {
+        height: clamp(400px, 75vh, 800px); 
+        display: flex;
+        flex-direction: column;
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 1px rgba(0, 242, 255, 0.15);
+        position: relative;
+    }
+
+    .chat-container::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(0,242,255,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    #chat-box {
+        flex: 1;
+        overflow-y: auto;
+        padding: clamp(20px, 3vw, 35px);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        scroll-behavior: smooth;
+        background: radial-gradient(circle at center, rgba(0, 242, 255, 0.015) 0%, transparent 100%);
+    }
+
+    /* 🖱️ HYBRID SCROLLBAR */
+    #chat-box::-webkit-scrollbar { width: 5px; }
+    #chat-box::-webkit-scrollbar-thumb { 
+        background: var(--neon-blue); 
+        border-radius: 10px; 
+    }
+
+    .msg {
+        max-width: clamp(80%, 72%, 72%); 
+        padding: 18px 24px;
+        border-radius: 16px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.02rem;
+        line-height: 1.5;
+        position: relative;
+    }
+
+    /* 👤 USER MESSAGE */
+    .user-msg {
+        align-self: flex-end;
+        background: linear-gradient(135deg, var(--divine-purple), #8013fe);
+        color: white;
+        border-bottom-right-radius: 2px;
+        box-shadow: 0 8px 20px rgba(188, 19, 254, 0.2);
+    }
+
+    /* 🤖 AI MESSAGE */
+    .ai-msg {
+        align-self: flex-start;
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: #f1f5f9;
+        border-bottom-left-radius: 2px;
+        border-left: 3px solid var(--neon-blue);
+    }
+
+    .input-area {
+        padding: 20px clamp(15px, 2.5vw, 30px);
+        background: rgba(8, 8, 16, 0.95);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    #user-input {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 16px 20px;
+        border-radius: 12px;
+        color: white;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        outline: none;
+        transition: all 0.3s;
+    }
+
+    #user-input:focus { 
+        border-color: var(--neon-blue); 
+        background: rgba(0, 242, 255, 0.03);
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.15);
+    }
+
+    .btn-send {
+        background: transparent;
+        border: 1px solid var(--neon-blue);
+        color: var(--neon-blue);
+        border-radius: 12px;
+        padding: 14px 22px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-send:active { background: var(--neon-blue); color: #000; }
+
+    @media (min-width: 1024px) {
+        .btn-send:hover { 
+            background: var(--neon-blue); 
+            color: #050508; 
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4); 
+            border-color: #ffffff;
+        }
+    }
+
+    .typing-indicator {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.7rem;
+        color: var(--neon-blue);
+        margin: 5px 0 15px 30px;
+        display: none;
+        letter-spacing: 2px;
+        animation: pulse 1.5s infinite;
+    }
+
+    .label {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        display: block;
+        margin-bottom: 8px;
+        opacity: 0.5;
+        letter-spacing: 2px;
+    }
+
+    /* 📝 MARKDOWN STYLING FOR CHAT MESSAGES */
+    .msg p { margin: 0 0 12px 0; }
+    .msg p:last-child { margin-bottom: 0; }
+    .msg ul, .msg ol { margin: 8px 0 12px 22px; padding: 0; }
+    .msg li { margin-bottom: 6px; }
+    .msg h1, .msg h2, .msg h3, .msg h4 {
+        font-family: 'Orbitron', sans-serif;
+        margin: 18px 0 10px 0;
+        font-size: 1.15rem;
+        color: var(--neon-blue);
+        text-shadow: 0 0 5px rgba(0, 242, 255, 0.2);
+    }
+    .msg h1:first-child, .msg h2:first-child, .msg h3:first-child { margin-top: 0; }
+    .msg pre {
+        background: rgba(5, 5, 10, 0.7);
+        padding: 16px;
+        border-radius: 10px;
+        overflow-x: auto;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        margin: 12px 0;
+    }
+    .msg code {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.92em;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 3px 6px;
+        border-radius: 5px;
+        color: #ffd700;
+    }
+    .msg pre code { background: transparent; padding: 0; border-radius: 0; color: inherit; }
+</style>
+
+<!-- Load Marked.js Markdown Parser -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<div class="chat-wrapper">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1 class="divine-heading">AI MENTOR</h1>
+        <p class="hud-font" style="color: var(--neon-blue); opacity: 0.8; font-size: 0.75rem; letter-spacing: 4px;">
+            SECURED SYLLABUS TRAJECTORY ADVISOR
+        </p>
+    </div>
+
+    <div class="chat-container">
+        <div id="chat-box">
+            <div class="msg ai-msg animate__animated animate__fadeInLeft">
+                <span class="label">STATUS: ENCRYPTED LINK SECURED</span>
+                Namaste Cadet! Main <strong>Samarth Supreme AI</strong> MENTOR hoon. <br>
+                Class, topics, formula sheets ya planning strategy—kuch bhi pucho. 🚀
+            </div>
+        </div>
+
+        <div id="loading" class="typing-indicator">
+            >> ANALYZING STRATEGIC CORE... ⚡
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type query for the AI mentor..." autocomplete="off">
+            <button onclick="send()" class="btn-send">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    marked.setOptions({
+        gfm: true,
+        breaks: true
+    });
+
+    async function send() {
+        const input = document.getElementById('user-input');
+        const box = document.getElementById('chat-box');
+        const load = document.getElementById('loading');
+        const msg = input.value.trim();
+
+        if(!msg) return;
+
+        box.innerHTML += `
+            <div class="msg user-msg animate__animated animate__fadeInRight">
+                <span class="label" style="color: rgba(255,255,255,0.6);">CADET INQUIRY</span>
+                ${msg}
+            </div>`;
+        
+        input.value = "";
+        box.scrollTop = box.scrollHeight;
+        load.style.display = "block";
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: msg})
+            });
+            const data = await res.json();
+            
+            load.style.display = "none";
+            const parsedResponse = marked.parse(data.response);
+            box.innerHTML += `
+                <div class="msg ai-msg animate__animated animate__fadeInLeft">
+                    <span class="label" style="color: var(--neon-blue);">MENTOR ASSISTANCE</span>
+                    ${parsedResponse}
+                </div>`;
+            box.scrollTop = box.scrollHeight;
+        } catch (e) {
+            load.style.display = "none";
+            box.innerHTML += `<div class="msg ai-msg" style="color: var(--neon-red); border-left-color: var(--neon-red);">>> [ERROR]: Neural Link Corrupted. ⚠️</div>`;
+        }
+    }
+
+    document.getElementById('user-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') send();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 🎯 HYBRID EXAM TERMINAL ARCHITECTURE */
+    .quiz-container { 
+        max-width: 1100px; 
+        margin: 0 auto; 
+        animation: animate__animated animate__fadeIn;
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    .start-card {
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: clamp(30px, 6vw, 60px);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 242, 255, 0.15);
+        position: relative;
+    }
+
+    .start-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(0,242,255,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    /* 📊 EXAM HUD - Responsive */
+    .progress-hud { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 30px; 
+        background: rgba(10, 10, 20, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        padding: clamp(15px, 3vw, 25px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-left: 4px solid var(--neon-blue);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .section-badge { 
+        background: rgba(0, 242, 255, 0.1); 
+        color: var(--neon-blue); 
+        border: 1px solid rgba(0, 242, 255, 0.3);
+        padding: 6px 14px; 
+        border-radius: 6px; 
+        font-weight: 800; 
+        font-size: 0.7rem; 
+        font-family: 'Orbitron', sans-serif;
+        letter-spacing: 2px;
+        text-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+    }
+    
+    .q-card { 
+        background: var(--glass); 
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+        border-radius: 24px; 
+        padding: clamp(25px, 5vw, 50px); 
+        position: relative; 
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        min-height: clamp(320px, 45vh, 480px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+    }
+
+    .q-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent, rgba(188,19,254,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    /* ⌨️ OPTION GRID - PC(2 Columns) | Mobile(1 Column) */
+    .opt-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+        gap: 16px; 
+        margin-top: 35px; 
+    }
+
+    .btn-opt { 
+        background: rgba(255, 255, 255, 0.015); 
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+        color: rgba(255, 255, 255, 0.85); 
+        padding: clamp(16px, 2.5vw, 22px); 
+        border-radius: 14px; 
+        text-align: left; 
+        cursor: pointer; 
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+    }
+
+    .btn-opt-selected {
+        border-color: var(--divine-purple) !important;
+        background: rgba(188, 19, 254, 0.1) !important;
+        box-shadow: 0 0 18px rgba(188, 19, 254, 0.25) !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    #submit-test-btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 25px var(--neon-red) !important;
+    }
+
+    .stat-label {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        color: var(--neon-blue);
+        opacity: 0.6;
+        letter-spacing: 2px;
+    }
+
+    /* 📱 MOBILE OPTIMIZATIONS */
+    @media (max-width: 768px) {
+        .progress-hud { justify-content: space-around; padding: 15px; }
+        .q-card { padding: 22px; }
+        .btn-opt:active { background: var(--neon-blue); color: #000; }
+        .opt-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 1024px) {
+        .btn-opt:hover { 
+            border-color: var(--neon-blue); 
+            background: rgba(0, 242, 255, 0.05); 
+            transform: translateX(6px); 
+            color: #ffffff;
+        }
+    }
+</style>
+
+<div class="quiz-container">
+    <div id="start-box" class="start-card animate__animated animate__zoomIn">
+        <h1 class="divine-heading" style="margin-bottom: 15px;">MOCK <span style="color: white;">EXAM</span></h1>
+        <p class="hud-font" style="opacity: 0.6; font-size: 0.75rem; letter-spacing: 4px; margin-bottom: 35px; text-align: center;">
+            >> FULL PAPER SIMULATION MATRIX ONLINE
+        </p>
+        
+        <div style="max-width: 650px; margin: 0 auto; text-align: left;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <label class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); letter-spacing: 2px; display: block; margin-bottom: 8px;">CLASS LEVEL</label>
+                    <select id="class-lvl" class="input-slot" onchange="updateSubjects()">
+                        <option value="6">Class 6</option>
+                        <option value="7">Class 7</option>
+                        <option value="8">Class 8</option>
+                        <option value="9">Class 9</option>
+                        <option value="10" selected>Class 10</option>
+                        <option value="11">Class 11</option>
+                        <option value="12">Class 12</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); letter-spacing: 2px; display: block; margin-bottom: 8px;">DIFFICULTY MODE</label>
+                    <select id="difficulty-dropdown" class="input-slot">
+                        <option value="Easy (NCERT Based)">Easy (NCERT Based)</option>
+                        <option value="Moderate (Board PYQs)" selected>Moderate (Board PYQs)</option>
+                        <option value="Hard (Competitive)">Hard (Competitive)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="exam-selector-container" style="display: none; margin-bottom: 20px;">
+                <label class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); letter-spacing: 2px; display: block; margin-bottom: 8px;">COMPETITIVE TRACK</label>
+                <select id="exam-track" class="input-slot" onchange="updateSubjects()">
+                    <option value="JEE" selected>JEE Main (Engineering)</option>
+                    <option value="NEET">NEET UG (Medical)</option>
+                    <option value="NDA">UPSC NDA (Armed Forces)</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 35px;">
+                <div>
+                    <label class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); letter-spacing: 2px; display: block; margin-bottom: 8px;">SUBJECT</label>
+                    <select id="sub-select" class="input-slot">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); letter-spacing: 2px; display: block; margin-bottom: 8px;">CHAPTER FOCUS</label>
+                    <input type="text" id="chapter-in" class="input-slot" placeholder="e.g. Trigonometry" value="General Syllabus">
+                </div>
+            </div>
+
+            <button onclick="startMission()" class="btn-divine" style="width: 100%; padding: 18px; border-radius: 12px;">
+                INITIALIZE EXAM 🚀
+            </button>
+        </div>
+    </div>
+
+    <div id="exam-area" style="display: none;">
+        <div class="progress-hud">
+            <div style="text-align: left;">
+                <span class="stat-label">MODULE:</span><br>
+                <div id="sec-tag" class="section-badge">SECTION A</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <span class="stat-label">INDEX:</span><br>
+                <div class="hud-font" style="font-size: 1.05rem; color: #fff;">
+                    <span id="current-idx" class="glow-cyan">01</span>/<span id="total-idx" style="opacity: 0.5;">35</span>
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <span class="stat-label">TIME REMAINING:</span><br>
+                <div id="timer-display" class="hud-font" style="color: #00ffcc; font-size: clamp(1rem, 3vw, 1.25rem); text-shadow: 0 0 10px #00ffcc; font-weight: 800;">03:00:00</div>
+            </div>
+        </div>
+
+        <div class="q-card animate__animated animate__fadeIn">
+            <span id="q-src" class="hud-font" style="font-size: 0.6rem; color: var(--neon-blue); letter-spacing: 2px; opacity: 0.5; margin-bottom: 20px; display: block;">>> SOURCE: CBSE</span>
+            <h3 id="q-txt" style="font-weight: 600; font-size: clamp(1.2rem, 4vw, 1.65rem); color: #ffffff; line-height: 1.5;"></h3>
+            <div id="opt-grid" class="opt-grid"></div>
+            
+            <!-- Navigation and Submit Controls -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 45px; gap: 20px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="prevQuestion()" class="btn-divine" style="padding: 12px 24px; border-radius: 10px; font-size: 0.8rem;">
+                        ← PREV
+                    </button>
+                    <button onclick="nextQuestion()" class="btn-divine" style="padding: 12px 24px; border-radius: 10px; font-size: 0.8rem;">
+                        NEXT →
+                    </button>
+                </div>
+                
+                <button id="submit-test-btn" onclick="confirmSubmission()" style="background-color: var(--neon-red); color: white; padding: 14px 28px; font-family: 'Orbitron', sans-serif; border: none; cursor: pointer; border-radius: 10px; box-shadow: 0 0 15px rgba(255, 0, 85, 0.4); font-weight: 700; letter-spacing: 1.5px; transition: 0.3s; width: auto;">
+                    🔴 SUBMIT MISSION
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let examData = [];
+    let activeIdx = 0;
+    let timerInterval;
+    let currentSessionQuestionIds = [];
+    let userCapturedAnswers = {};
+
+    function toggleCompetitiveTrack() {
+        const diff = document.getElementById('difficulty-dropdown').value;
+        const compContainer = document.getElementById('exam-selector-container');
+        if (diff === 'Hard (Competitive)') {
+            compContainer.style.display = 'block';
+        } else {
+            compContainer.style.display = 'none';
+        }
+        updateSubjects();
+    }
+
+    function updateSubjects() {
+        const diff = document.getElementById('difficulty-dropdown').value;
+        const classLvl = document.getElementById('class-lvl').value;
+        const track = document.getElementById('exam-track').value;
+        const subSelect = document.getElementById('sub-select');
+        
+        subSelect.innerHTML = "";
+        let options = [];
+        
+        if (diff === 'Hard (Competitive)') {
+            if (track === 'JEE') {
+                options = ["Mathematics", "Physics", "Chemistry"];
+            } else if (track === 'NEET') {
+                options = ["Biology", "Physics", "Chemistry", "Botany", "Zoology"];
+            } else if (track === 'NDA') {
+                options = ["Mathematics", "English", "Physics", "History", "Geography", "Chemistry", "General Science", "Current Affairs"];
+            }
+        } else {
+            if (classLvl === "11" || classLvl === "12") {
+                options = ["Mathematics", "Physics", "Chemistry", "Biology", "English Core", "Accountancy", "Business Studies", "Economics"];
+            } else {
+                options = ["Mathematics", "Science", "Social Science", "English Core"];
+            }
+        }
+        
+        options.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt;
+            el.innerText = opt;
+            subSelect.appendChild(el);
+        });
+    }
+
+    async function startMission() {
+        const sub = document.getElementById('sub-select').value;
+        const diff = document.getElementById('difficulty-dropdown').value;
+        const classLvl = document.getElementById('class-lvl').value;
+        const examTrack = diff === 'Hard (Competitive)' ? document.getElementById('exam-track').value : null;
+        const chapter = document.getElementById('chapter-in').value.trim();
+
+        if(!sub) return alert("Cadet, Subject is Mandatory!");
+
+        const startBox = document.getElementById('start-box');
+        startBox.innerHTML = `
+            <div style="padding: 60px; text-align: center;">
+                <i class="fa-solid fa-microchip fa-spin" style="font-size: 4rem; color: var(--neon-blue); margin-bottom: 20px;"></i>
+                <h2 class="divine-heading" style="font-size: 1.5rem;">COMPILING EXAM MATRIX...</h2>
+            </div>`;
+        
+        try {
+            const res = await fetch('/generate_quiz', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    subject: sub,
+                    difficulty: diff,
+                    class_level: classLvl,
+                    exam_track: examTrack,
+                    chapter: chapter
+                })
+            });
+            examData = await res.json();
+            
+            currentSessionQuestionIds = examData.map(q => q.q_id);
+            userCapturedAnswers = {};
+            activeIdx = 0;
+
+            startBox.style.display = 'none';
+            document.getElementById('exam-area').style.display = 'block';
+            document.getElementById('total-idx').innerText = examData.length.toString().padStart(2, '0');
+            
+            let timerSeconds = 10800; 
+            if (examTrack === "NDA") {
+                timerSeconds = 9000; 
+            } else if (examTrack === "NEET") {
+                timerSeconds = 12000; 
+            }
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                    return;
+                }
+                
+                let hrs = Math.floor(timerSeconds / 3600).toString().padStart(2, '0');
+                let mins = Math.floor((timerSeconds % 3600) / 60).toString().padStart(2, '0');
+                let secs = (timerSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer-display').innerText = `${hrs}:${mins}:${secs}`;
+                
+                // Pulse red color when timer under 10 minutes
+                if (timerSeconds < 600) {
+                    document.getElementById('timer-display').style.color = 'var(--neon-red)';
+                    document.getElementById('timer-display').style.textShadow = '0 0 10px var(--neon-red)';
+                }
+            }, 1000);
+
+            renderQ();
+        } catch (e) {
+            alert("Neural Link Failed. Check API!");
+            location.reload();
+        }
+    }
+
+    function renderQ() {
+        if(activeIdx >= examData.length) {
+            activeIdx = examData.length - 1;
+            alert("You have reached the end of the test. You can review your answers or click the SUBMIT button to complete the exam!");
+            return;
+        }
+        if(activeIdx < 0) {
+            activeIdx = 0;
+            return;
+        }
+        
+        const q = examData[activeIdx];
+        document.getElementById('sec-tag').innerText = `SEC ${q.section} (${q.marks}M)`;
+        document.getElementById('current-idx').innerText = (activeIdx + 1).toString().padStart(2, '0');
+        
+        const match = q.question.match(/\[Source:\s*([^\]]+)\]/) || q.question.match(/\(([^)]+)\)$/);
+        document.getElementById('q-src').innerText = match ? `>> SOURCE: ${match[1].toUpperCase()}` : `>> SOURCE: SIMULATION MOCK`;
+        
+        let cleanedQText = q.question;
+        if (match) {
+            cleanedQText = q.question.replace(match[0], "").trim();
+        }
+        document.getElementById('q-txt').innerText = cleanedQText;
+        
+        const grid = document.getElementById('opt-grid');
+        grid.innerHTML = "";
+        
+        const currentSelected = userCapturedAnswers[q.q_id] || null;
+
+        q.options.forEach((o, idx) => {
+            const btn = document.createElement('button');
+            if (currentSelected === o) {
+                btn.className = 'btn-opt btn-opt-selected animate__animated animate__fadeIn';
+            } else {
+                btn.className = 'btn-opt animate__animated animate__fadeIn';
+            }
+            btn.style.animationDelay = `${idx * 0.05}s`;
+            btn.innerHTML = `<span class="hud-font" style="opacity: 0.3; font-size: 0.75rem; margin-right: 10px;">[${String.fromCharCode(65+idx)}]</span> ${o}`;
+            btn.onclick = () => selectOption(o);
+            grid.appendChild(btn);
+        });
+    }
+
+    function selectOption(optionText) {
+        const q = examData[activeIdx];
+        userCapturedAnswers[q.q_id] = optionText;
+        renderQ();
+    }
+
+    function prevQuestion() {
+        if (activeIdx > 0) {
+            activeIdx--;
+            renderQ();
+        }
+    }
+
+    function nextQuestion() {
+        if (activeIdx < examData.length - 1) {
+            activeIdx++;
+            renderQ();
+        } else {
+            alert("You are on the last question. Click 'SUBMIT MISSION' when you are done!");
+        }
+    }
+
+    function confirmSubmission() {
+        let confirmAction = confirm("Are you sure you want to exit the WAR ZONE and submit your paper?");
+        if (confirmAction) {
+            processTestSubmission();
+        }
+    }
+
+    function processTestSubmission() {
+        clearInterval(timerInterval); 
+        console.log("Submitting responses to backend engine...");
+        
+        let submissionPayload = {
+            userId: "user_101",
+            questions: currentSessionQuestionIds,
+            answers: userCapturedAnswers
+        };
+        
+        fetch('/api/submit-simulation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(submissionPayload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert("Mission Accomplished! Your results are processed successfully.");
+            window.location.href = "/result?correct=" + data.correct + "&total=" + data.total;
+        })
+        .catch(error => {
+            console.error('Submission Error:', error);
+            alert("Submission error encountered. Navigating back to safety.");
+            window.location.href = "/dashboard";
+        });
+    }
+
+    function handleTimeout() {
+        alert("⚡ TIME OUT! The system is automatically submitting your paper.");
+        processTestSubmission();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('difficulty-dropdown').addEventListener('change', function() {
+            let selectedValue = this.value;
+            let examDiv = document.getElementById('exam-selector-container');
+            
+            if(selectedValue === "Hard (Competitive)") {
+                examDiv.style.display = "block";
+            } else {
+                examDiv.style.display = "none";
+            }
+            updateSubjects();
+        });
+        
+        toggleCompetitiveTrack();
+    });
+</script>
+{% endblock %}

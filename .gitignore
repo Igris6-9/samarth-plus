@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+pip-wheel-metadata/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables - NEVER commit these!
+.env
+*.env
+
+# Database files (SQLite - will be recreated by Vercel)
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Vercel
+.vercel/
+
+# Logs
+*.log

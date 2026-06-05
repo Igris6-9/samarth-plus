@@ -1,0 +1,641 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 📊 HYBRID MISSION DEBRIEF ARCHITECTURE */
+    .result-wrapper {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding-bottom: 50px;
+        animation: animate__animated animate__fadeIn;
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    /* 🎯 SCORE GAUGE HUD - Responsive Scaling */
+    .score-container {
+        text-align: center;
+        margin-bottom: clamp(30px, 5vw, 50px);
+        padding: clamp(30px, 6vw, 60px);
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 242, 255, 0.15);
+    }
+
+    .score-container::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(188,19,254,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .gauge-box {
+        position: relative;
+        width: clamp(180px, 40vw, 250px);
+        height: clamp(180px, 40vw, 250px);
+        margin: 20px auto;
+    }
+
+    .circle-bg { fill: none; stroke: rgba(255,255,255,0.02); stroke-width: 12; }
+    .circle-progress {
+        fill: none;
+        stroke: var(--neon-blue);
+        stroke-width: 12;
+        stroke-linecap: round;
+        stroke-dasharray: 628.32; 
+        stroke-dashoffset: 628.32;
+        transition: stroke-dashoffset 2.5s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.55));
+    }
+
+    .score-text {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        font-weight: 900;
+        color: white;
+        text-shadow: 0 0 15px rgba(255,255,255,0.3);
+    }
+
+    /* 📈 ANALYTICS GRID - PC(3 Cols) | Mobile(1 Col) */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 35px;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.012);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: clamp(20px, 4vw, 35px);
+        border-radius: 20px;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+    }
+
+    .stat-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent, rgba(255,255,255,0.05));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .stat-card small {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+        color: var(--neon-blue);
+        display: block;
+        margin-bottom: 12px;
+        opacity: 0.8;
+    }
+
+    .stat-card h2 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(1.6rem, 4vw, 2.3rem);
+        font-weight: 800;
+    }
+
+    /* 📈 MIDDLE GRID FOR TRAJECTORY AND INSIGHTS */
+    .result-middle-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+        margin-bottom: 40px;
+    }
+    @media (max-width: 992px) {
+        .result-middle-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .glass-panel {
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: clamp(20px, 4vw, 35px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+        position: relative;
+    }
+
+    .glass-panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent, rgba(188,19,254,0.12));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .graph-container {
+        width: 100%;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(5, 5, 10, 0.5);
+        margin-top: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .graph-container img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    /* 🚀 SOLUTIONS REVEAL ENGINE */
+    .solutions-toggle-btn {
+        width: 100%;
+        padding: 18px;
+        font-size: 0.9rem !important;
+        letter-spacing: 2px;
+        font-family: 'Orbitron', sans-serif;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--neon-blue), var(--divine-purple));
+        color: #050508;
+        font-weight: 800;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 0 20px rgba(0, 242, 255, 0.35);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+    
+    .solutions-toggle-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0 30px rgba(0, 242, 255, 0.55);
+        background: linear-gradient(135deg, #fff, var(--neon-blue));
+    }
+
+    .solution-card {
+        background: rgba(255, 255, 255, 0.01);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 20px;
+        padding: clamp(15px, 3vw, 25px);
+        margin-bottom: 20px;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .solution-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent, rgba(255,255,255,0.04));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .solution-card:hover {
+        border-color: rgba(0, 242, 255, 0.25);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .solution-q-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .q-number {
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 700;
+        color: var(--neon-blue);
+        letter-spacing: 2px;
+        font-size: 0.9rem;
+    }
+
+    .q-badge {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+    }
+
+    .badge-correct {
+        background: rgba(0, 255, 128, 0.08);
+        color: var(--matrix-green);
+        border: 1px solid rgba(0, 255, 128, 0.25);
+        filter: drop-shadow(0 0 5px rgba(0,255,128,0.2));
+    }
+
+    .badge-incorrect {
+        background: rgba(255, 0, 85, 0.08);
+        color: var(--neon-red);
+        border: 1px solid rgba(255, 0, 85, 0.25);
+        filter: drop-shadow(0 0 5px rgba(255,0,85,0.2));
+    }
+
+    .badge-unanswered {
+        background: rgba(255, 255, 255, 0.04);
+        color: #aaa;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .solution-question-text {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: white;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+
+    .solution-options-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    .sol-option {
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: 14px 18px;
+        border-radius: 12px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.98rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #ccd6f6;
+    }
+
+    .opt-correct {
+        border-color: var(--matrix-green) !important;
+        background: rgba(0, 255, 128, 0.04) !important;
+        color: white !important;
+        font-weight: 500;
+    }
+
+    .opt-incorrect {
+        border-color: var(--neon-red) !important;
+        background: rgba(255, 0, 85, 0.04) !important;
+        color: white !important;
+        font-weight: 500;
+    }
+
+    .badge-opt {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.6rem;
+        letter-spacing: 1px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: 800;
+    }
+
+    .opt-correct .badge-opt {
+        background: var(--matrix-green);
+        color: black;
+    }
+
+    .opt-incorrect .badge-opt {
+        background: var(--neon-red);
+        color: white;
+    }
+
+    .solution-explanation-box {
+        background: rgba(5, 5, 10, 0.4);
+        border-radius: 14px;
+        padding: 18px;
+        border-left: 3px solid var(--neon-blue);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-left-width: 3px;
+        border-left-color: var(--neon-blue);
+    }
+
+    .exp-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.75rem;
+        color: var(--neon-blue);
+        letter-spacing: 1.5px;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .exp-content {
+        font-size: 1rem;
+        color: #ccd6f6;
+        line-height: 1.5;
+    }
+
+    /* 🚀 BUTTON ACTIONS - Responsive Stack */
+    .btn-action {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 40px;
+    }
+
+    .btn-action .btn-divine {
+        width: clamp(100%, 45%, 250px);
+        padding: 16px 28px;
+        font-size: 0.95rem;
+        border-radius: 12px;
+    }
+
+    @media (min-width: 1024px) {
+        .stat-card:hover { 
+            transform: translateY(-6px);
+            border-color: rgba(0, 242, 255, 0.3);
+            background: rgba(22, 22, 38, 0.55);
+            box-shadow: 0 15px 30px rgba(0, 242, 255, 0.08);
+        }
+    }
+</style>
+
+<div class="result-wrapper">
+    <div class="score-container animate__animated animate__zoomIn">
+        <h1 class="divine-heading" style="font-size: clamp(1.5rem, 5vw, 2.8rem); margin-bottom: 10px;">MISSION COMPLETE</h1>
+        
+        <div class="gauge-box">
+            <svg width="100%" height="100%" viewBox="0 0 250 250">
+                <circle class="circle-bg" cx="125" cy="125" r="100"></circle>
+                <circle id="progress-bar" class="circle-progress" cx="125" cy="125" r="100"></circle>
+            </svg>
+            <div class="score-text" id="final-score">0%</div>
+        </div>
+        
+        <p class="hud-font" style="font-size: 0.75rem; letter-spacing: 4px; opacity: 0.8; color: var(--neon-blue);">NEURAL PERFORMANCE INDEX MATRIX</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card animate__animated animate__fadeInUp">
+            <small>OBTAINED SCORE</small>
+            <h2 id="correct-count" style="color: var(--matrix-green); text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);">--</h2>
+        </div>
+        <div class="stat-card animate__animated animate__fadeInUp" style="animation-delay: 0.15s;">
+            <small>ACCURACY PERCENTAGE</small>
+            <h2 id="accuracy-val" style="color: var(--neon-blue); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">--</h2>
+        </div>
+        <div class="stat-card animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+            <small>MILITARY RANK</small>
+            <h2 style="color: var(--gold);" id="rank-status">ANALYZING...</h2>
+        </div>
+    </div>
+
+    <div class="result-middle-grid animate__animated animate__fadeInUp" style="animation-delay: 0.45s;">
+        <!-- AI Progress Graph -->
+        <div class="glass-panel">
+            <h4 class="hud-font" style="color: var(--neon-blue); margin-bottom: 20px; font-size: 0.85rem; letter-spacing: 2px;">
+                <i class="fa-solid fa-chart-line" style="margin-right: 8px;"></i>AI PROGRESS TRACK:
+            </h4>
+            {% if chart %}
+            <div class="graph-container">
+                <img src="{{ chart }}" alt="Neural Progress Graph">
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 50px 20px;">
+                <div class="hud-font" style="color: var(--divine-purple); font-size: 1.8rem; font-weight: 800; text-shadow: 0 0 10px rgba(188, 19, 254, 0.35);">NO DATA DATA</div>
+                <p class="hud-font" style="font-size: 0.65rem; opacity: 0.5; margin-top: 10px; letter-spacing: 2px;">AWAITING MORE SIMULATIONS</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- AI Insights Panel -->
+        <div class="glass-panel">
+            <h4 class="hud-font" style="color: var(--neon-blue); margin-bottom: 20px; font-size: 0.85rem; letter-spacing: 2px;">
+                <i class="fa-solid fa-microchip" style="margin-right: 8px;"></i>AI DIAGNOSTICS:
+            </h4>
+            <div id="ai-suggestion" style="font-size: 1.05rem; line-height: 1.6; color: #ccd6f6; font-style: italic;">
+                "Wait while Samarth AI analyzes your trajectory..."
+            </div>
+        </div>
+    </div>
+
+    <!-- Solutions reveal section -->
+    <div class="solutions-reveal-section animate__animated animate__fadeInUp" style="animation-delay: 0.6s; margin-top: 30px;">
+        <button id="toggle-solutions-btn" onclick="toggleSolutions()" class="solutions-toggle-btn">
+            <i class="fa-solid fa-key"></i> VIEW SOLUTIONS & DETAILED EXPLANATIONS
+        </button>
+        
+        <div id="solutions-outer-container" style="display: none; margin-top: 35px;">
+            <h3 class="hud-font" style="color: var(--neon-blue); margin-bottom: 25px; font-size: 0.95rem; border-left: 3px solid var(--neon-blue); padding-left: 12px; letter-spacing: 2px; text-transform: uppercase;">
+                EXAM SOLUTION SHEET MATRIX
+            </h3>
+            <div id="solutions-list">
+                <!-- Dynamically generated solutions -->
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-action">
+        <a href="/dashboard" class="btn-divine">DASHBOARD</a>
+        <a href="/compare" class="btn-divine" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1);">HALL OF FAME</a>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        const scorePct = {{ score_percent|default(0) }}; 
+        const correct = {{ correct_ans|default(0) }};
+        const total = {{ total_ques|default(15) }};
+        
+        // 1. Gauge Animation
+        const circle = document.getElementById('progress-bar');
+        const circumference = 628.32; 
+        const offset = circumference - (scorePct / 100) * circumference;
+        setTimeout(() => { circle.style.strokeDashoffset = offset; }, 500);
+
+        // 2. Numerical Counter
+        let current = 0;
+        const scoreInterval = setInterval(() => {
+            if(current >= scorePct) {
+                clearInterval(scoreInterval);
+                document.getElementById('final-score').innerText = scorePct + "%";
+            } else {
+                document.getElementById('final-score').innerText = current + "%";
+                current++;
+            }
+        }, 15);
+
+        // 3. Data Sync
+        document.getElementById('correct-count').innerText = `${correct}/${total}`;
+        document.getElementById('accuracy-val').innerText = scorePct + "%";
+        
+        // 4. Rank logic
+        let rank = "RECRUIT ⚔️";
+        let color = "#ffffff";
+        if(scorePct >= 90) { rank = "DIVINE 👑"; color = "var(--gold)"; }
+        else if(scorePct >= 75) { rank = "ELITE ⚡"; color = "var(--neon-blue)"; }
+        else if(scorePct >= 50) { rank = "WARRIOR 🛡️"; color = "var(--divine-purple)"; }
+        document.getElementById('rank-status').innerText = rank;
+        document.getElementById('rank-status').style.color = color;
+        if (scorePct >= 90) {
+            document.getElementById('rank-status').style.textShadow = '0 0 10px rgba(255, 215, 0, 0.4)';
+        } else if (scorePct >= 75) {
+            document.getElementById('rank-status').style.textShadow = '0 0 10px rgba(0, 242, 255, 0.4)';
+        } else if (scorePct >= 50) {
+            document.getElementById('rank-status').style.textShadow = '0 0 10px rgba(188, 19, 254, 0.4)';
+        }
+
+        // 5. AI Text - Call Gemini dynamically
+        const aiSuggestionEl = document.getElementById('ai-suggestion');
+        aiSuggestionEl.innerHTML = `<span style="color: var(--neon-blue); font-family: 'Orbitron'; font-size: 0.85rem;"><i class="fa-solid fa-sync fa-spin"></i> INITIALIZING GEMINI NEURAL DIAGNOSTICS...</span>`;
+        
+        fetch('/api/get-result-analysis')
+            .then(res => res.json())
+            .then(data => {
+                if (data.analysis) {
+                    aiSuggestionEl.innerHTML = data.analysis;
+                } else {
+                    aiSuggestionEl.innerText = "Failed to load diagnostic analysis.";
+                }
+            })
+            .catch(err => {
+                console.error("Analysis Load Error:", err);
+                aiSuggestionEl.innerText = "Neural connection failed. Unable to fetch AI report.";
+            });
+
+        // Solutions logic
+        let solutionsLoaded = false;
+        window.toggleSolutions = function() {
+            const btn = document.getElementById('toggle-solutions-btn');
+            const container = document.getElementById('solutions-outer-container');
+            const listEl = document.getElementById('solutions-list');
+            
+            if (container.style.display === "none") {
+                // Show solutions
+                container.style.display = "block";
+                btn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> HIDE SOLUTIONS SHEET`;
+                btn.style.background = "rgba(255,255,255,0.02)";
+                btn.style.border = "1px solid rgba(255, 255, 255, 0.1)";
+                btn.style.color = "white";
+                btn.style.boxShadow = "none";
+                
+                if (!solutionsLoaded) {
+                    listEl.innerHTML = `<div style="text-align: center; padding: 40px;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--neon-blue); margin-bottom: 15px;"></i><p class="hud-font" style="font-size: 0.75rem; letter-spacing: 2px;">FETCHING DECRYPTION KEYS...</p></div>`;
+                    
+                    fetch('/api/get-result-solutions')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.status === "success" && data.questions) {
+                                renderSolutions(data.questions);
+                                solutionsLoaded = true;
+                            } else {
+                                listEl.innerHTML = `<div style="text-align: center; padding: 30px; border: 1px solid var(--neon-red); border-radius: 15px; background: rgba(255,0,85,0.05);"><h4 class="hud-font" style="color: var(--neon-red); margin-bottom: 5px;">DECRYPTION FAILURE</h4><p style="font-family: 'Outfit'; color: #aaa; margin: 0;">${data.message || "Failed to load solution schema."}</p></div>`;
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Solutions Fetch Error:", err);
+                            listEl.innerHTML = `<div style="text-align: center; padding: 30px; border: 1px solid var(--neon-red); border-radius: 15px; background: rgba(255,0,85,0.05);"><h4 class="hud-font" style="color: var(--neon-red); margin-bottom: 5px;">CONNECTION LOST</h4><p style="font-family: 'Outfit'; color: #aaa; margin: 0;">Unable to establish link to solutions core.</p></div>`;
+                        });
+                }
+            } else {
+                // Hide solutions
+                container.style.display = "none";
+                btn.innerHTML = `<i class="fa-solid fa-key"></i> VIEW SOLUTIONS & DETAILED EXPLANATIONS`;
+                btn.style.background = "linear-gradient(135deg, var(--neon-blue), var(--divine-purple))";
+                btn.style.border = "none";
+                btn.style.color = "black";
+                btn.style.boxShadow = "0 0 20px rgba(0, 242, 255, 0.35)";
+            }
+        };
+
+        function renderSolutions(questions) {
+            const listEl = document.getElementById('solutions-list');
+            listEl.innerHTML = "";
+            
+            questions.forEach((q, idx) => {
+                const isUnanswered = !q.user_answer || q.user_answer.trim() === "";
+                const isCorrect = !isUnanswered && (q.user_answer.trim() === q.correct_answer.trim());
+                
+                let badgeHTML = "";
+                if (isUnanswered) {
+                    badgeHTML = `<span class="q-badge badge-unanswered"><i class="fa-solid fa-circle-minus"></i> UNANSWERED</span>`;
+                } else if (isCorrect) {
+                    badgeHTML = `<span class="q-badge badge-correct"><i class="fa-solid fa-circle-check"></i> CORRECT</span>`;
+                } else {
+                    badgeHTML = `<span class="q-badge badge-incorrect"><i class="fa-solid fa-circle-xmark"></i> INCORRECT</span>`;
+                }
+                
+                let optionsHTML = "";
+                if (q.options && q.options.length > 0) {
+                    optionsHTML = `<div class="solution-options-list">`;
+                    q.options.forEach(o => {
+                        let optClass = "";
+                        let optBadge = "";
+                        
+                        const optionIsCorrect = (o.trim() === q.correct_answer.trim());
+                        const optionIsSelected = (!isUnanswered && o.trim() === q.user_answer.trim());
+                        
+                        if (optionIsCorrect) {
+                            optClass = "opt-correct";
+                            if (optionIsSelected) {
+                                optBadge = `<span class="badge-opt">YOURS & CORRECT</span>`;
+                            } else {
+                                optBadge = `<span class="badge-opt">CORRECT ANSWER</span>`;
+                            }
+                        } else if (optionIsSelected) {
+                            optClass = "opt-incorrect";
+                            optBadge = `<span class="badge-opt">YOUR ANSWER</span>`;
+                        }
+                        
+                        optionsHTML += `<div class="sol-option ${optClass}">${o} ${optBadge}</div>`;
+                    });
+                    optionsHTML += `</div>`;
+                }
+                
+                const card = document.createElement('div');
+                card.className = "solution-card animate__animated animate__fadeInUp";
+                card.style.animationDelay = `${idx * 0.04}s`;
+                card.innerHTML = `
+                    <div class="solution-q-header">
+                        <span class="q-number">QUESTION ${(idx + 1).toString().padStart(2, '0')}</span>
+                        ${badgeHTML}
+                    </div>
+                    <div class="solution-question-text">${q.question}</div>
+                    ${optionsHTML}
+                    <div class="solution-explanation-box">
+                        <div class="exp-title"><i class="fa-solid fa-lightbulb"></i> DETAILED ANALYSIS:</div>
+                        <div class="exp-content">${q.explanation || "No explanation provided for this question."}</div>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+    }
+</script>
+{% endblock %}

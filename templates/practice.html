@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 🛡️ WAR ZONE PRACTICE SIMULATOR */
+    .practice-container { 
+        max-width: 1000px; 
+        margin: 0 auto; 
+        animation: animate__animated animate__fadeIn;
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    .config-card {
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: clamp(25px, 5vw, 50px);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 242, 255, 0.15);
+        position: relative;
+    }
+
+    .config-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(188,19,254,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .config-field label {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        color: var(--neon-blue);
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+        display: block;
+        text-transform: uppercase;
+    }
+
+    /* 🎮 PRACTICE ARENA */
+    .arena-hud {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        background: rgba(10, 10, 20, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        padding: 18px 25px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-left: 4px solid var(--divine-purple);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .arena-hud-stat {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.8rem;
+        color: #ffffff;
+        letter-spacing: 1.5px;
+    }
+
+    .arena-hud-stat span {
+        color: var(--neon-blue);
+        font-weight: 800;
+        text-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+    }
+
+    .practice-card {
+        background: var(--glass);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: clamp(25px, 5vw, 45px);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        min-height: 360px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+    }
+
+    .practice-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent, rgba(188,19,254,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .option-btn {
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.85);
+        padding: 16px 20px;
+        border-radius: 14px;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        margin-top: 12px;
+    }
+
+    .option-btn:hover:not(:disabled) {
+        border-color: var(--neon-blue);
+        background: rgba(0, 242, 255, 0.04);
+        transform: translateX(6px);
+        color: #ffffff;
+    }
+
+    .option-correct {
+        background: rgba(0, 255, 65, 0.08) !important;
+        border-color: var(--matrix-green) !important;
+        color: var(--matrix-green) !important;
+        font-weight: 600;
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.15) !important;
+    }
+
+    .option-incorrect {
+        background: rgba(255, 0, 85, 0.08) !important;
+        border-color: var(--neon-red) !important;
+        color: var(--neon-red) !important;
+        font-weight: 600;
+        box-shadow: 0 0 15px rgba(255, 0, 85, 0.15) !important;
+    }
+
+    .feedback-box {
+        margin-top: 30px;
+        padding: 20px;
+        background: rgba(5, 5, 10, 0.6);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-left: 4px solid var(--neon-blue);
+        animation: animate__animated animate__fadeInUp;
+    }
+
+    .complement-text {
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 800;
+        font-size: 0.95rem;
+        margin-bottom: 10px;
+        letter-spacing: 1.5px;
+    }
+
+    .explanation-text {
+        font-size: 1rem;
+        color: #ccd6f6;
+        line-height: 1.5;
+    }
+</style>
+
+<div class="practice-container">
+    <div id="practice-config" class="config-card">
+        <div style="text-align: center; margin-bottom: 35px;">
+            <h1 class="divine-heading" style="margin-bottom: 5px;">WAR <span style="color: white;">ZONE</span></h1>
+            <p class="hud-font" style="font-size: 0.75rem; color: var(--neon-blue); letter-spacing: 4px; opacity: 0.7;">PRACTICE ARENA INITIALIZATION MATRIX</p>
+        </div>
+
+        <div class="config-grid">
+            <div class="config-field">
+                <label>Class Level</label>
+                <select id="class-lvl" class="input-slot">
+                    <option value="6">Class 6</option>
+                    <option value="7">Class 7</option>
+                    <option value="8">Class 8</option>
+                    <option value="9">Class 9</option>
+                    <option value="10" selected>Class 10</option>
+                    <option value="11">Class 11</option>
+                    <option value="12">Class 12</option>
+                </select>
+            </div>
+            
+            <div class="config-field">
+                <label>Subject</label>
+                <input type="text" id="subject-in" class="input-slot" placeholder="e.g. Science" required>
+            </div>
+
+            <div class="config-field">
+                <label>Chapter Name</label>
+                <input type="text" id="chapter-in" class="input-slot" placeholder="e.g. Electricity" required>
+            </div>
+
+            <div class="config-field">
+                <label>Difficulty</label>
+                <select id="difficulty-in" class="input-slot">
+                    <option value="Easy">Easy (NCERT)</option>
+                    <option value="Moderate" selected>Moderate (Board PYQs)</option>
+                    <option value="Hard">Hard (Competitive/Olympiad)</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="startPractice()" class="btn-divine" style="width: 100%; border-radius: 12px; padding: 18px; font-size: 0.95rem;">
+            LAUNCH SIMULATION MISSION 🚀
+        </button>
+    </div>
+
+    <div id="practice-arena" style="display: none;">
+        <div class="arena-hud">
+            <div class="arena-hud-stat">TARGET: <span id="hud-subject">SCIENCE</span></div>
+            <div class="arena-hud-stat">QUEST: <span id="current-q">01</span>/<span id="total-q">10</span></div>
+            <div class="arena-hud-stat">EFFICIENCY: <span id="hud-accuracy">100%</span></div>
+        </div>
+
+        <div class="practice-card">
+            <span id="practice-src" class="hud-font" style="font-size: 0.6rem; color: var(--neon-blue); letter-spacing: 2px; opacity: 0.6; margin-bottom: 20px; display: block;">>> INTEL LOCKED</span>
+            <h3 id="practice-q" style="font-weight: 600; font-size: clamp(1.2rem, 3.5vw, 1.55rem); color: #ffffff; margin-bottom: 25px; line-height: 1.5;"></h3>
+            
+            <div id="options-area"></div>
+
+            <div id="feedback-area" style="display: none;" class="feedback-box">
+                <div id="feedback-complement" class="complement-text"></div>
+                <div id="feedback-explanation" class="explanation-text"></div>
+            </div>
+
+            <div id="action-area" style="display: none; margin-top: 30px; text-align: right;">
+                <button onclick="nextQuestion()" class="btn-divine" style="padding: 12px 30px; border-radius: 10px; font-size: 0.8rem;">NEXT QUEST ⚔️</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let questions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let selectedAns = false;
+    let userCapturedAnswers = {};
+
+    async function startPractice() {
+        const payload = {
+            class_level: document.getElementById('class-lvl').value,
+            subject: document.getElementById('subject-in').value.trim(),
+            chapter: document.getElementById('chapter-in').value.trim(),
+            difficulty: document.getElementById('difficulty-in').value
+        };
+
+        if(!payload.subject || !payload.chapter) {
+            alert("Cadet! Subject and Chapter are mandatory fields.");
+            return;
+        }
+
+        const configCard = document.getElementById('practice-config');
+        configCard.innerHTML = `
+            <div style="text-align:center; padding: 60px;">
+                <i class="fa-solid fa-satellite-dish fa-spin" style="font-size: 4rem; color: var(--neon-blue); margin-bottom: 25px;"></i>
+                <h3 class="divine-heading" style="font-size: 1.3rem;">DOWNLOADING COMBAT SCHEMATICS...</h3>
+            </div>`;
+
+        try {
+            const res = await fetch('/generate_practice', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            questions = await res.json();
+
+            if(!questions || questions.length === 0) {
+                alert("AI core response timed out. Initiating backup local missions.");
+                location.reload();
+                return;
+            }
+
+            configCard.style.display = 'none';
+            document.getElementById('practice-arena').style.display = 'block';
+            document.getElementById('hud-subject').innerText = payload.subject.toUpperCase();
+            document.getElementById('total-q').innerText = questions.length.toString().padStart(2, '0');
+            
+            renderQuestion();
+        } catch (e) {
+            alert("Neural Link Failure. Resetting console.");
+            location.reload();
+        }
+    }
+
+    function renderQuestion() {
+        selectedAns = false;
+        const q = questions[currentIdx];
+        document.getElementById('current-q').innerText = (currentIdx + 1).toString().padStart(2, '0');
+        document.getElementById('practice-q').innerText = q.question;
+        
+        const match = q.question.match(/\(([^)]+)\)$/);
+        document.getElementById('practice-src').innerText = match ? `>> SOURCE: ${match[1].toUpperCase()}` : `>> SOURCE: TACTICAL ARENA`;
+
+        const opts = document.getElementById('options-area');
+        opts.innerHTML = "";
+        
+        q.options.forEach((o, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn animate__animated animate__fadeInUp';
+            btn.style.animationDelay = `${idx * 0.05}s`;
+            btn.innerHTML = `<span class="hud-font" style="opacity: 0.3; font-size: 0.75rem; margin-right: 10px;">[${String.fromCharCode(65+idx)}]</span> ${o}`;
+            btn.onclick = () => submitAnswer(btn, o);
+            opts.appendChild(btn);
+        });
+
+        document.getElementById('feedback-area').style.display = 'none';
+        document.getElementById('action-area').style.display = 'none';
+    }
+
+    function submitAnswer(btn, selection) {
+        if(selectedAns) return; 
+        selectedAns = true;
+
+        const q = questions[currentIdx];
+        userCapturedAnswers[q.id || currentIdx] = selection;
+        const isCorrect = (selection.trim() === q.answer.trim());
+        
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => {
+            b.disabled = true;
+            // Clean content to compare correctly
+            const cleanText = b.innerText.replace(/^\[[A-D]\]\s*/, "").trim();
+            if(cleanText === q.answer.trim()) {
+                b.className = "option-btn option-correct";
+            } else if(b === btn && !isCorrect) {
+                b.className = "option-btn option-incorrect";
+            }
+        });
+
+        if(isCorrect) {
+            score++;
+            document.getElementById('feedback-complement').innerText = q.complement || "CORRECT! GREAT WORK CADET! ⚔️";
+            document.getElementById('feedback-complement').style.color = "var(--matrix-green)";
+        } else {
+            document.getElementById('feedback-complement').innerText = q.complement || "INCORRECT. LEARN FROM THIS MILITARY ERROR! 🛡️";
+            document.getElementById('feedback-complement').style.color = "var(--neon-red)";
+        }
+
+        document.getElementById('feedback-explanation').innerHTML = `<strong>Concept Analysis:</strong> ${q.explanation}`;
+        document.getElementById('feedback-area').style.display = 'block';
+        document.getElementById('action-area').style.display = 'block';
+
+        const currentAccuracy = Math.round((score / (currentIdx + 1)) * 100);
+        document.getElementById('hud-accuracy').innerText = `${currentAccuracy}%`;
+    }
+
+    async function nextQuestion() {
+        currentIdx++;
+        if(currentIdx < questions.length) {
+            renderQuestion();
+        } else {
+            const subject = document.getElementById('hud-subject').innerText;
+            const submissionQuestions = questions.map((q, idx) => {
+                return {
+                    question: q.question,
+                    options: q.options,
+                    answer: q.answer,
+                    explanation: q.explanation,
+                    user_answer: userCapturedAnswers[q.id || idx] || ""
+                };
+            });
+            try {
+                await fetch('/api/submit-practice', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        subject: subject,
+                        score: score,
+                        total: questions.length,
+                        questions: submissionQuestions
+                    })
+                });
+            } catch(e) {
+                console.error("Practice Sync Failure:", e);
+            }
+            
+            window.location.href = `/result?correct=${score}&total=${questions.length}`;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 🎯 HYBRID MISSION ARCHITECTURE */
+    .goals-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        animation: animate__animated animate__fadeIn;
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    /* 🛰️ MISSION INPUT INTERFACE */
+    .mission-input-card {
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: clamp(20px, 5vw, 40px);
+        margin-bottom: clamp(30px, 8vw, 50px);
+        text-align: center;
+        position: relative;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+    }
+
+    .mission-input-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(0,242,255,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .goal-input {
+        width: 100%;
+        background: rgba(8, 8, 16, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 16px 20px;
+        border-radius: 12px;
+        color: white;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        outline: none;
+        margin-bottom: 22px;
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .goal-input:focus { 
+        border-color: var(--neon-blue); 
+        background: rgba(0, 242, 255, 0.03); 
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.15);
+    }
+
+    /* 📜 ACTIVE TRAJECTORIES LIST */
+    .mission-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .mission-item {
+        background: rgba(255, 255, 255, 0.012);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: 18px 24px;
+        border-radius: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+    }
+
+    .mission-item::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent, rgba(188,19,254,0.12));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .mission-info { display: flex; align-items: center; gap: 18px; flex: 1; }
+
+    /* ⚡ NEON STATUS ORB */
+    .status-orb {
+        width: 10px; height: 10px;
+        background: var(--neon-blue);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--neon-blue);
+        animation: pulseNeon 2s infinite;
+        flex-shrink: 0;
+    }
+
+    @keyframes pulseNeon {
+        0%, 100% { opacity: 0.5; transform: scale(0.9); }
+        50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .mission-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: clamp(1rem, 3vw, 1.15rem);
+        color: #ffffff;
+        line-height: 1.3;
+    }
+
+    .mission-date {
+        opacity: 0.45;
+        font-size: 0.7rem;
+        font-family: 'Orbitron', sans-serif;
+        margin-top: 6px;
+        display: block;
+        letter-spacing: 1.5px;
+    }
+
+    .delete-btn {
+        color: rgba(255, 77, 77, 0.5);
+        font-size: 1.4rem;
+        padding-left: 15px;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* 📱 RESPONSIVE ADJUSTMENTS */
+    @media (min-width: 1024px) {
+        .mission-item:hover {
+            transform: translateX(10px);
+            border-color: rgba(188, 19, 254, 0.25);
+            box-shadow: -10px 0 20px rgba(188, 19, 254, 0.08);
+            background: rgba(22, 22, 38, 0.55);
+        }
+        .delete-btn:hover { 
+            color: var(--neon-red); 
+            transform: scale(1.2) rotate(90deg); 
+            filter: drop-shadow(0 0 8px rgba(255,0,85,0.4));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .mission-item { padding: 14px 18px; }
+        .mission-info { gap: 12px; }
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: rgba(255, 255, 255, 0.01);
+        border: 1.5px dashed rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        opacity: 0.65;
+    }
+</style>
+
+<div class="goals-container">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 class="divine-heading">MISSION TARGETS</h1>
+        <p class="hud-font" style="color: var(--neon-blue); font-size: 0.75rem; letter-spacing: 4px; opacity: 0.8; margin-top: 12px;">
+            NEURAL STRATEGIC MILITARY TARGET OBJECTIVES
+        </p>
+    </div>
+
+    <div class="mission-input-card animate__animated animate__zoomIn">
+        <form action="/add_goal" method="POST">
+            <input type="text" name="goal_title" class="goal-input" placeholder="Initialize New Mission Objective Target..." required autocomplete="off">
+            <button type="submit" class="btn-divine" style="width: 100%; border-radius: 12px; padding: 16px; font-size: 0.95rem;">
+                LAUNCH MISSION 🚀
+            </button>
+        </form>
+    </div>
+
+    <div class="mission-list">
+        <h4 class="hud-font" style="opacity: 0.7; text-transform: uppercase; letter-spacing: 3px; font-size: 0.8rem; margin-bottom: 15px; border-left: 3px solid var(--divine-purple); padding-left: 12px; margin-left: 5px;">
+            ACTIVE STRATEGIC TRAJECTORIES
+        </h4>
+        
+        {% for goal in goals %}
+        <div class="mission-item animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index * 0.04 }}s">
+            <div class="mission-info">
+                <div class="status-orb"></div>
+                <div>
+                    <div class="mission-title">{{ goal.title }}</div>
+                    <span class="mission-date">
+                        <i class="fa-regular fa-clock" style="margin-right: 6px;"></i>{{ goal.date_created.strftime('%d %b, %Y') }}
+                    </span>
+                </div>
+            </div>
+            <a href="/delete_goal/{{ goal.id }}" class="delete-btn">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </a>
+        </div>
+        {% else %}
+        <div class="empty-state animate__animated animate__fadeIn">
+            <i class="fa-solid fa-satellite" style="font-size: 3.5rem; margin-bottom: 20px; color: var(--neon-blue); filter: drop-shadow(0 0 10px rgba(0,242,255,0.35));"></i>
+            <p class="hud-font" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.7;">NO ACTIVE STRATEGIC TARGETS FOUND</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

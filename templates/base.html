@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMARTH | Divine Academic Ecosystem 👑</title>
+
+    <!-- Font Awesome & Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <!-- Custom stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        /* 🚀 SUPREME FLOATING NAVIGATION SYSTEM */
+        nav {
+            background: rgba(10, 10, 20, 0.65);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top-color: rgba(255, 255, 255, 0.1);
+            padding: 12px clamp(15px, 3vw, 35px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 20px;
+            z-index: 1000;
+            margin: 20px auto 0 auto;
+            width: 90%;
+            max-width: 1300px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 242, 255, 0.15);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.2rem, 3.5vw, 1.7rem);
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #ffffff;
+            text-decoration: none;
+            background: linear-gradient(135deg, #ffffff 30%, var(--neon-blue) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 8px rgba(0, 242, 255, 0.3));
+            transition: all 0.3s;
+        }
+
+        .logo:hover {
+            filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.6));
+        }
+
+        .nav-links { 
+            display: flex; 
+            gap: clamp(6px, 1.2vw, 16px); 
+            align-items: center; 
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 10px 14px;
+            border-radius: 30px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-links a span {
+            max-width: 0;
+            opacity: 0;
+            overflow: hidden;
+            display: inline-block;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            vertical-align: middle;
+            white-space: nowrap;
+            margin-left: 0;
+        }
+
+        .nav-links a:hover span,
+        .nav-links a.active span {
+            max-width: 140px;
+            opacity: 1;
+            margin-left: 8px;
+        }
+
+        .nav-links a i {
+            font-size: 1rem;
+            color: var(--neon-blue);
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+            background: rgba(0, 242, 255, 0.05);
+            border-color: rgba(0, 242, 255, 0.15);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+        }
+
+        .nav-links a:hover i {
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 5px var(--neon-blue));
+        }
+
+        /* Active navigation styling */
+        .nav-links a.active {
+            color: #ffffff;
+            background: rgba(188, 19, 254, 0.08);
+            border-color: rgba(188, 19, 254, 0.25);
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.15);
+        }
+        .nav-links a.active i {
+            color: var(--divine-purple);
+            filter: drop-shadow(0 0 5px var(--divine-purple));
+        }
+
+        /* 📱 MOBILE NAVIGATION OPTIMIZATION */
+        @media (max-width: 768px) {
+            nav { 
+                padding: 10px 15px; 
+                top: 10px;
+                margin: 10px auto 0 auto;
+                width: 95%;
+            }
+            .nav-links a { 
+                padding: 10px 12px; 
+            }
+            .nav-links a i {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* 👑 HYBRID MAIN VIEWPORT */
+        .container {
+            padding: clamp(20px, 5vw, 50px) 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 80vh;
+        }
+
+        /* 👣 FOOTER BRANDING */
+        footer {
+            text-align: center;
+            padding: 50px 20px;
+            font-family: 'Orbitron', sans-serif;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 60px;
+        }
+
+        footer span {
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body class="animate__animated animate__fadeIn">
+
+    <div class="scanlines"></div>
+
+    {% if request.path not in ['/login', '/register'] %}
+    <nav>
+        <a href="/" class="logo animate__animated animate__pulse animate__infinite">SAMARTH</a>
+        
+        <div class="nav-links">
+            {% if current_user.is_authenticated %}
+                <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i><span>DASHBOARD</span></a>
+                <a href="/quiz"><i class="fa-solid fa-brain"></i><span>QUIZ</span></a>
+                <a href="/practice"><i class="fa-solid fa-shield-halved"></i><span>PRACTICE</span></a>
+                <a href="/chatbot"><i class="fa-solid fa-robot"></i><span>AI MENTOR</span></a>
+                <a href="/history"><i class="fa-solid fa-clock-rotate-left"></i><span>ARCHIVES</span></a>
+                <a href="/compare"><i class="fa-solid fa-ranking-star"></i><span>RANKING</span></a>
+                <a href="/logout" style="color: #ff0055;"><i class="fa-solid fa-power-off" style="color: #ff0055;"></i><span>LOGOUT</span></a>
+            {% else %}
+                <a href="/"><i class="fa-solid fa-house"></i><span>HOME</span></a>
+                <a href="/login"><i class="fa-solid fa-right-to-bracket"></i><span>LOGIN</span></a>
+                <a href="/register"><i class="fa-solid fa-user-plus"></i><span>ENROLL</span></a>
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="container animate__animated animate__slideInUp">
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+        ENGINEERED BY <span class="footer-glow-special">DAKASH 👑</span>, <span class="footer-glow">ARSH, DAKSH, ABHINAV & ANANT</span><br>
+        <span style="font-size: 0.55rem; opacity: 0.4; margin-top: 12px; display: block; letter-spacing: 2px;">
+            CORE-VERSION: 3.0.0 | HYBRID SUPREME ENGINE
+        </span>
+    </footer>
+
+    <!-- Active Navigation Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const path = window.location.pathname;
+            const links = document.querySelectorAll('.nav-links a');
+            links.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === path || (path.startsWith(href) && href !== '/' && href !== '/logout')) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

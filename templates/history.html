@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 📜 HYBRID ACADEMIC ARCHITECTURE */
+    .history-layout {
+        display: grid;
+        grid-template-columns: 1fr; 
+        gap: 30px;
+        margin-top: 20px;
+    }
+
+    @media (min-width: 1100px) {
+        .history-layout {
+            grid-template-columns: 380px 1fr; 
+            align-items: start;
+        }
+    }
+
+    /* 📝 SCHOOL ENTRY TERMINAL */
+    .school-entry-box {
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: clamp(20px, 4vw, 35px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+        position: relative;
+    }
+
+    .school-entry-box::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(188,19,254,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    @media (min-width: 1100px) {
+        .school-entry-box {
+            position: sticky;
+            top: 100px;
+        }
+    }
+
+    .school-entry-box h3 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.1rem;
+        margin-bottom: 25px;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        letter-spacing: 2px;
+    }
+
+    .manual-input-group label {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--neon-blue);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    /* 📜 TIMELINE FEED */
+    .timeline-container { 
+        width: 100%;
+    }
+
+    .timeline-item {
+        background: var(--glass);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: clamp(16px, 3vw, 28px);
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .timeline-item::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent, rgba(0,242,255,0.12));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .score-big { 
+        font-family: 'Orbitron', sans-serif; 
+        font-size: clamp(1.4rem, 4vw, 2.1rem); 
+        font-weight: 900; 
+        color: var(--neon-blue); 
+        text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+    }
+
+    @media (min-width: 1024px) {
+        .timeline-item:hover {
+            transform: translateX(8px);
+            border-color: rgba(0, 242, 255, 0.25);
+            background: rgba(22, 22, 38, 0.55);
+        }
+    }
+
+    /* 📱 MOBILE FIXES */
+    @media (max-width: 768px) {
+        .timeline-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .score-display {
+            width: 100%;
+            text-align: left !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 12px;
+        }
+    }
+
+    /* 🏷️ TIMELINE LOG SOURCE TAGS */
+    .source-tag {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 5px 12px;
+        border-radius: 6px;
+        letter-spacing: 1.5px;
+        display: inline-block;
+        text-transform: uppercase;
+    }
+
+    .tag-quiz {
+        background: rgba(0, 242, 255, 0.08);
+        color: var(--neon-blue);
+        border: 1px solid rgba(0, 242, 255, 0.25);
+    }
+
+    .tag-practice {
+        background: rgba(188, 19, 254, 0.08);
+        color: var(--divine-purple);
+        border: 1px solid rgba(188, 19, 254, 0.25);
+    }
+
+    .tag-manual {
+        background: rgba(255, 215, 0, 0.08);
+        color: var(--gold);
+        border: 1px solid rgba(255, 215, 0, 0.25);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--glass);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+</style>
+
+<div class="history-wrapper animate__animated animate__fadeIn">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 class="divine-heading">ACADEMIC LEGACY</h1>
+        <p class="hud-font" style="color: var(--neon-blue); font-size: 0.75rem; letter-spacing: 4px; opacity: 0.8; margin-top: 12px;">
+            NEURAL TIMELINE HISTORICAL PERFORMANCE LOGS
+        </p>
+    </div>
+
+    <div class="history-layout">
+        <div class="school-entry-box">
+            <h3><i class="fa-solid fa-microchip glow-purple"></i> DATA SYNC ENGINE</h3>
+            <form action="/add_manual_score" method="POST">
+                <div class="manual-input-group" style="margin-bottom: 20px;">
+                    <label>Module / Subject Title</label>
+                    <input type="text" name="subject" class="input-slot" placeholder="e.g. Science Term Exam" required>
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+                    <div style="flex: 1;">
+                        <label class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); letter-spacing: 1.5px; display: block; margin-bottom: 8px;">OBTAINED</label>
+                        <input type="number" name="score" class="input-slot" placeholder="85" required min="0">
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); letter-spacing: 1.5px; display: block; margin-bottom: 8px;">TOTAL</label>
+                        <input type="number" name="total" class="input-slot" placeholder="100" required min="1">
+                    </div>
+                </div>
+                <button type="submit" class="btn-divine" style="width: 100%; border-radius: 12px; padding: 16px; font-size: 0.85rem;">
+                    SYNC LOG 🚀
+                </button>
+            </form>
+        </div>
+
+        <div class="timeline-container">
+            <h4 class="hud-font" style="opacity: 0.7; letter-spacing: 4px; font-size: 0.8rem; margin-bottom: 25px; border-left: 3px solid var(--neon-blue); padding-left: 12px;">
+                TRAJECTORY FEED
+            </h4>
+            
+            <div id="unified-feed">
+                {% for record in history %}
+                <div class="timeline-item animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index * 0.04 }}s">
+                    <div class="info-side">
+                        <span class="source-tag tag-{{ record.test_type|lower }}">
+                            {{ 'EXTERNAL' if record.test_type == 'MANUAL' else record.test_type }}
+                        </span>
+                        <h3 style="margin-top: 12px; font-weight: 700; font-size: 1.35rem; color: #ffffff;">
+                            {{ record.subject_name }}
+                        </h3>
+                        <p class="hud-font" style="font-size: 0.7rem; opacity: 0.5; margin-top: 6px;">
+                            <i class="fa-regular fa-calendar" style="margin-right: 6px;"></i>{{ record.date_taken.strftime('%d %b, %Y') }}
+                        </p>
+                    </div>
+                    <div class="score-display" style="text-align: right;">
+                        <div class="score-big">{{ record.score }}<span style="font-size: 0.95rem; opacity: 0.4;">/{{ record.total }}</span></div>
+                        <div class="hud-font" style="font-weight: 700; font-size: 0.85rem; margin-top: 5px; color: {{ 'var(--matrix-green)' if (record.score/record.total) >= 0.8 else 'white' }}; text-shadow: {{ '0 0 10px var(--matrix-green)' if (record.score/record.total) >= 0.8 else 'none' }};">
+                            {{ ((record.score / record.total) * 100)|round(1) }}%
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-database" style="font-size: 3.5rem; margin-bottom: 20px; color: var(--divine-purple); filter: drop-shadow(0 0 10px rgba(188,19,254,0.4));"></i>
+                    <p class="hud-font" style="font-size: 0.85rem; letter-spacing: 2px; opacity: 0.7;">ARCHIVES EMPTY // NO RECORDS SYNCED</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

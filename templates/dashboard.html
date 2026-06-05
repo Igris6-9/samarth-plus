@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 🛰️ HYBRID DASHBOARD ARCHITECTURE */
+    .dashboard-wrapper {
+        animation: animate__animated animate__fadeIn;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* 📊 HUD (HEADS-UP DISPLAY) - Responsive */
+    .hud-display {
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: clamp(20px, 4vw, 40px);
+        margin-bottom: 40px;
+        position: relative;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 242, 255, 0.15);
+    }
+
+    .hud-display::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(188,19,254,0.15));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .hud-content {
+        display: flex; 
+        justify-content: space-around; 
+        align-items: center; 
+        flex-wrap: wrap; 
+        gap: 30px;
+    }
+
+    .hud-stat { 
+        text-align: center; 
+        flex: 1; 
+        min-width: 260px; 
+    }
+
+    .stat-value {
+        font-size: clamp(2.2rem, 8vw, 3.6rem); 
+        font-weight: 900; 
+        color: #ffffff; 
+        font-family: 'Orbitron', sans-serif;
+        background: linear-gradient(135deg, #ffffff 40%, var(--neon-blue) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 15px rgba(0, 242, 255, 0.35);
+    }
+
+    .stat-label {
+        font-size: 0.75rem; 
+        opacity: 0.5; 
+        letter-spacing: 3px; 
+        font-family: 'Orbitron', sans-serif;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+    }
+
+    /* 📈 GRAPH CONTAINER */
+    .graph-container {
+        width: 100%;
+        margin-top: 15px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        background: rgba(5, 5, 10, 0.5);
+    }
+
+    .graph-container img {
+        width: 100%;
+        height: auto;
+        display: block;
+        transition: all 0.3s;
+    }
+
+    .graph-container:hover img {
+        transform: scale(1.02);
+    }
+
+    /* 🎮 MISSION MODULES GRID - PC(4) | TABLET(2) | MOBILE(1) */
+    .command-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+        gap: 25px; 
+        margin-top: 30px; 
+    }
+
+    .cmd-btn {
+        background: rgba(255, 255, 255, 0.015);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 20px;
+        padding: clamp(30px, 5vw, 45px) 20px;
+        text-align: center;
+        text-decoration: none;
+        color: white;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cmd-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent, rgba(0,242,255,0.15));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        transition: all 0.4s;
+    }
+
+    .cmd-btn i { 
+        font-size: clamp(2.2rem, 5vw, 3rem); 
+        color: var(--neon-blue); 
+        transition: all 0.3s; 
+        filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3));
+    }
+
+    .cmd-btn span { 
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.85rem; 
+        font-weight: 700; 
+        letter-spacing: 2px; 
+    }
+
+    .cmd-btn:active {
+        transform: scale(0.96);
+        background: rgba(0, 242, 255, 0.06);
+    }
+
+    @media (min-width: 1024px) {
+        .cmd-btn:hover {
+            background: rgba(20, 20, 35, 0.55);
+            border-color: rgba(0, 242, 255, 0.3);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 242, 255, 0.12);
+        }
+        .cmd-btn:hover::before {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent, var(--neon-blue));
+        }
+        .cmd-btn:hover i { 
+            transform: scale(1.15); 
+            color: #fff; 
+            filter: drop-shadow(0 0 15px var(--neon-blue));
+        }
+    }
+
+    .divider { width: 1px; height: 120px; background: rgba(255, 255, 255, 0.08); }
+    @media (max-width: 900px) { 
+        .divider { display: none; } 
+        .hud-content { flex-direction: column; }
+    }
+</style>
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-header" style="margin-bottom: 40px; text-align: center;">
+        <h1 class="divine-heading">COMMAND CENTER</h1>
+        <p class="hud-font" style="font-size: 0.75rem; color: var(--neon-blue); letter-spacing: 4px; opacity: 0.8; margin-top: 12px;">
+            CADET ID: <span style="color: #fff;">{{ user.username }}</span> // INTEGRITY STATUS: <span class="glow-green">ONLINE</span>
+        </p>
+    </div>
+
+    <div class="hud-display animate__animated animate__zoomIn">
+        <div class="hud-content">
+            <div class="hud-stat">
+                <div class="stat-label">NEURAL ACCURACY RATE</div>
+                <div class="stat-value">92.4%</div>
+                <div class="progress-container" style="width: 100%; max-width: 220px; margin: 15px auto;">
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 10px; height: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                        <div style="width: 92.4%; background: linear-gradient(90deg, var(--divine-purple), var(--neon-blue)); height: 100%; border-radius: 10px; box-shadow: 0 0 12px var(--neon-blue);"></div>
+                    </div>
+                </div>
+                <p style="font-size: 0.65rem; opacity: 0.5; font-family: 'Orbitron'; margin-top: 10px;">TACTICAL MISSION METRICS MET</p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="hud-stat" style="flex: 1.5;">
+                <div class="stat-label">NEURAL TRACKING TRAJECTORY</div>
+                {% if chart %}
+                <div class="graph-container">
+                    <img src="{{ chart }}" alt="Neural Progress Graph">
+                </div>
+                {% else %}
+                <div class="stat-value" style="color: var(--divine-purple); font-size: 2.5rem; margin-top: 20px;">NO DATA FEED</div>
+                <p class="hud-font" style="font-size: 0.65rem; opacity: 0.4; margin-top: 5px; letter-spacing: 2px;">COMPLETE TESTS TO SYNC TRAJECTORY</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <h4 class="hud-font" style="opacity: 0.7; letter-spacing: 4px; font-size: 0.8rem; margin-bottom: 25px; border-left: 3px solid var(--neon-blue); padding-left: 12px; margin-left: 5px;">
+        MISSION MODULES MATRIX
+    </h4>
+
+    <div class="command-grid">
+        <a href="/quiz" class="cmd-btn">
+            <i class="fa-solid fa-brain"></i>
+            <span>MISSION QUIZ</span>
+        </a>
+
+        <a href="/practice" class="cmd-btn" style="position: relative;">
+            <i class="fa-solid fa-shield-halved" style="color: var(--divine-purple); filter: drop-shadow(0 0 10px rgba(188,19,254,0.3));"></i>
+            <span>WAR ZONE</span>
+        </a>
+
+        <a href="/chatbot" class="cmd-btn">
+            <i class="fa-solid fa-robot" style="color: var(--matrix-green); filter: drop-shadow(0 0 10px rgba(0,255,65,0.3));"></i>
+            <span>AI MENTOR</span>
+        </a>
+
+        <a href="/timetable" class="cmd-btn">
+            <i class="fa-solid fa-calendar-days" style="color: var(--neon-amber); filter: drop-shadow(0 0 10px rgba(255,170,0,0.3));"></i>
+            <span>STRATEGY</span>
+        </a>
+
+        <a href="/goals" class="cmd-btn">
+            <i class="fa-solid fa-bullseye" style="color: var(--neon-red); filter: drop-shadow(0 0 10px rgba(255,0,85,0.3));"></i>
+            <span>TARGETS</span>
+        </a>
+
+        <a href="/history" class="cmd-btn">
+            <i class="fa-solid fa-scroll" style="color: rgba(255,255,255,0.7);"></i>
+            <span>ARCHIVES</span>
+        </a>
+
+        <a href="/compare" class="cmd-btn">
+            <i class="fa-solid fa-trophy" style="color: var(--gold); filter: drop-shadow(0 0 10px rgba(255,215,0,0.3));"></i>
+            <span>LEADERBOARD</span>
+        </a>
+
+        <a href="/logout" class="cmd-btn" style="border-color: rgba(255, 0, 85, 0.25); background: rgba(255, 0, 85, 0.01);">
+            <i class="fa-solid fa-power-off" style="color: var(--neon-red); filter: drop-shadow(0 0 10px rgba(255,0,85,0.3));"></i>
+            <span style="color: var(--neon-red);">ABORT LINK</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

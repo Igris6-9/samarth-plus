@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 🌌 HYBRID HERO ARCHITECTURE */
+    .hero-section {
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        padding: 60px 20px;
+    }
+
+    .hero-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(2rem, 8vw, 5.5rem); 
+        font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 25px;
+        letter-spacing: -1.5px;
+        background: linear-gradient(135deg, #ffffff 20%, var(--neon-blue) 80%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.25));
+        text-transform: uppercase;
+    }
+
+    .hero-subtitle {
+        font-family: 'Outfit', sans-serif;
+        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.7);
+        max-width: 800px;
+        letter-spacing: 0.5px;
+        margin-bottom: 45px;
+        line-height: 1.6;
+    }
+
+    /* ⚡ FEATURE GRID - Responsive columns */
+    .feature-showcase {
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 50px;
+        padding-bottom: 60px;
+    }
+
+    .feat-card {
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: clamp(30px, 5vw, 45px) 30px;
+        border-radius: 24px;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        text-align: center;
+        position: relative;
+    }
+
+    .feat-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent, rgba(0,242,255,0.15));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .feat-icon {
+        font-size: 3rem;
+        color: var(--neon-blue);
+        margin-bottom: 25px;
+        filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.35));
+        transition: all 0.3s;
+    }
+
+    .feat-card h3 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.25rem;
+        letter-spacing: 2px;
+        margin-bottom: 15px;
+        color: #ffffff;
+    }
+
+    .feat-card p {
+        font-size: 0.95rem;
+        opacity: 0.65;
+        line-height: 1.5;
+    }
+
+    /* 📊 SYSTEM BADGES */
+    .opt-badge {
+        background: rgba(0, 242, 255, 0.06);
+        border: 1px solid rgba(0, 242, 255, 0.25);
+        padding: 8px 24px;
+        border-radius: 100px;
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(0.65rem, 2vw, 0.8rem);
+        font-weight: 800;
+        letter-spacing: 4px;
+        color: var(--neon-blue);
+        margin-bottom: 30px;
+        text-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+        text-transform: uppercase;
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.05);
+    }
+
+    .hero-btns {
+        display: flex; 
+        gap: 20px; 
+        flex-wrap: wrap; 
+        justify-content: center;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    /* 📱 MOBILE FIXES */
+    @media (max-width: 768px) {
+        .hero-section { min-height: 70vh; padding: 40px 10px; }
+        .hero-btns { flex-direction: column; width: 100%; }
+        .hero-btns .btn-divine { width: 100%; }
+    }
+
+    @media (min-width: 1024px) {
+        .feat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(0, 242, 255, 0.35);
+            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.15);
+            background: rgba(18, 18, 30, 0.6);
+        }
+        .feat-card:hover .feat-icon {
+            transform: scale(1.1);
+            color: var(--divine-purple);
+            filter: drop-shadow(0 0 15px rgba(188, 19, 254, 0.5));
+        }
+    }
+</style>
+
+<div class="hero-section">
+    <div class="opt-badge animate__animated animate__fadeInDown">
+        >> CORE STABILIZATION ACTIVE // 92.4% <<
+    </div>
+    
+    <h1 class="hero-title animate__animated animate__zoomIn">
+        EVOLVE TO <br> <span class="glow-cyan">DIVINE RANK</span>
+    </h1>
+    
+    <p class="hero-subtitle animate__animated animate__fadeInUp">
+        SAMARTH integrates highly advanced Neural Regression matrices to map student workflows, predict test outcomes, and provide personalized AI mentorship.
+    </p>
+
+    <div class="hero-btns animate__animated animate__fadeInUp animate__delay-1s">
+        {% if not current_user.is_authenticated %}
+            <a href="/register" class="btn-divine">INITIALIZE ENROLLMENT</a>
+            <a href="/login" class="btn-divine" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.15);">CADET LOGIN</a>
+        {% else %}
+            <a href="/dashboard" class="btn-divine">ENTER COMMAND CENTER 🛰️</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="feature-showcase">
+    <div class="feat-card animate__animated animate__fadeInLeft">
+        <i class="fa-solid fa-brain feat-icon"></i>
+        <h3>PREDICTIVE METRICS</h3>
+        <p>Dynamic AI matrices analyze performance tracks to map exam readiness and forecast future scores.</p>
+    </div>
+
+    <div class="feat-card animate__animated animate__fadeInUp">
+        <i class="fa-solid fa-robot feat-icon"></i>
+        <h3>SUPREME AI MENTOR</h3>
+        <p>Engage with our custom LLM tutor loaded with study strategies, chemistry rendering engines, and course assistance.</p>
+    </div>
+
+    <div class="feat-card animate__animated animate__fadeInRight">
+        <i class="fa-solid fa-ranking-star feat-icon"></i>
+        <h3>HALL OF FAME</h3>
+        <p>Compete with the cohort. Record scores, review statistics, climb rankings, and claim the supreme position.</p>
+    </div>
+</div>
+
+<div style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 50px 10px;">
+    <h4 class="hud-font" style="opacity: 0.4; letter-spacing: 5px; font-size: 0.75rem; margin-bottom: 25px;">THE CORE ARCHITECTS</h4>
+    <div style="display: flex; justify-content: center; gap: clamp(15px, 4vw, 40px); flex-wrap: wrap; font-family: 'Orbitron'; font-size: 0.85rem; letter-spacing: 2px;">
+        <span class="footer-glow-special">DAKASH 👑</span>
+        <span class="footer-glow">ARSH SAIFI</span>
+        <span class="footer-glow" style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue);">DAKSH</span>
+        <span class="footer-glow" style="color: var(--neon-amber); text-shadow: 0 0 10px var(--neon-amber);">ABHINAV</span>
+        <span class="footer-glow" style="color: var(--matrix-green); text-shadow: 0 0 10px var(--matrix-green);">ANANT</span>
+    </div>
+</div>
+{% endblock %}

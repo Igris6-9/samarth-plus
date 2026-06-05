@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 🏆 HYBRID LEADERBOARD OPTIMIZATION */
+    .leaderboard-wrapper { 
+        max-width: 1100px; 
+        margin: 0 auto; 
+        animation: animate__animated animate__fadeIn; 
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    /* 🥇 PODIUM SYSTEM (Responsive) */
+    .podium {
+        display: flex; 
+        justify-content: center; 
+        align-items: flex-end;
+        gap: clamp(12px, 3.5vw, 35px); 
+        margin-bottom: clamp(40px, 8vw, 70px); 
+        padding-top: 50px;
+    }
+
+    .podium-card {
+        background: rgba(18, 18, 30, 0.55); 
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px; 
+        padding: clamp(20px, 3.5vw, 35px); 
+        text-align: center;
+        position: relative; 
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+        flex: 1;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
+
+    .podium-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .rank-1 { 
+        height: clamp(230px, 42vh, 300px); 
+        border-color: rgba(255, 215, 0, 0.3); 
+        z-index: 10; 
+        transform: scale(1.04); 
+        box-shadow: 0 20px 45px rgba(255, 215, 0, 0.08);
+    }
+    .rank-1::before {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.35), transparent, rgba(255, 215, 0, 0.15));
+    }
+
+    .rank-2 { 
+        height: clamp(190px, 37vh, 250px); 
+        border-color: rgba(192, 192, 192, 0.25); 
+        box-shadow: 0 15px 35px rgba(192, 192, 192, 0.05);
+    }
+    .rank-2::before {
+        background: linear-gradient(135deg, rgba(192, 192, 192, 0.3), transparent, rgba(192, 192, 192, 0.1));
+    }
+
+    .rank-3 { 
+        height: clamp(170px, 32vh, 220px); 
+        border-color: rgba(205, 127, 50, 0.25); 
+        box-shadow: 0 15px 35px rgba(205, 127, 50, 0.05);
+    }
+    .rank-3::before {
+        background: linear-gradient(135deg, rgba(205, 127, 50, 0.3), transparent, rgba(205, 127, 50, 0.1));
+    }
+
+    @media (min-width: 1024px) {
+        .podium-card:hover {
+            transform: translateY(-8px);
+        }
+        .rank-1:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 25px 50px rgba(255, 215, 0, 0.18), 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+    }
+
+    /* 📜 RESPONSIVE RANK LIST */
+    .rank-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .rank-item {
+        background: rgba(255, 255, 255, 0.012); 
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: clamp(14px, 2vw, 22px) clamp(18px, 3vw, 40px); 
+        border-radius: 16px;
+        display: grid; 
+        grid-template-columns: 60px 1fr 100px 100px;
+        align-items: center; 
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .rank-number { 
+        font-family: 'Orbitron', sans-serif; 
+        color: var(--neon-blue); 
+        font-weight: 800; 
+        font-size: 1.1rem;
+    }
+
+    .user-name { 
+        font-size: clamp(1rem, 2.5vw, 1.15rem);
+        font-weight: 600; 
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .user-score { 
+        font-family: 'Orbitron', sans-serif; 
+        font-weight: 700; 
+        text-align: right; 
+        color: var(--neon-blue);
+        font-size: clamp(1rem, 2vw, 1.2rem);
+        text-shadow: 0 0 8px rgba(0, 242, 255, 0.2);
+    }
+
+    .user-self { 
+        border: 1px solid rgba(188, 19, 254, 0.3) !important; 
+        background: rgba(188, 19, 254, 0.08) !important; 
+        box-shadow: 0 0 15px rgba(188, 19, 254, 0.1);
+    }
+
+    .verified-tag {
+        font-size: 0.75rem; 
+        color: var(--matrix-green); 
+        text-align: center;
+        font-family: 'Orbitron', sans-serif;
+        opacity: 0.8;
+        filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.3));
+    }
+
+    /* 📱 MOBILE MEDIA QUERIES */
+    @media (max-width: 768px) {
+        .podium { flex-direction: column; align-items: stretch; gap: 15px; margin-bottom: 35px; }
+        .podium-card { height: auto !important; transform: none !important; }
+        .rank-item { grid-template-columns: 50px 1fr 80px; } 
+        .verified-tag { display: none; }
+        .podium-card i.crown { font-size: 2.2rem; top: 15px; right: 25px; left: auto; transform: none; }
+    }
+</style>
+
+<div class="leaderboard-wrapper">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <h1 class="divine-heading">HALL OF FAME</h1>
+        <p class="hud-font" style="color: var(--neon-blue); letter-spacing: 4px; font-size: 0.75rem; opacity: 0.8;">
+            CADET LEADERSHIP SCOREBOARD MATRIX
+        </p>
+    </div>
+
+    <div class="podium">
+        {% if leaderboard|length >= 2 %}
+        <div class="podium-card rank-2 animate__animated animate__fadeInLeft">
+            <div class="hud-font" style="font-size: 0.7rem; color: #c0c0c0; margin-bottom: 10px; letter-spacing: 2px;">#02 // SILVER</div>
+            <div class="user-name" style="justify-content: center; font-size: 1.15rem;">{{ leaderboard[1].username }}</div>
+            <div class="hud-font" style="color: #c0c0c0; text-align: center; font-size: 1.4rem; font-weight: 700; margin-top: 15px; text-shadow: 0 0 8px rgba(192,192,192,0.3);">{{ (leaderboard[1].avg_score)|round(1) }}%</div>
+        </div>
+        {% endif %}
+
+        {% if leaderboard|length >= 1 %}
+        <div class="podium-card rank-1 animate__animated animate__fadeInUp">
+            <i class="fa-solid fa-crown crown" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); color: var(--gold); text-shadow: 0 0 20px var(--gold); font-size: 2.2rem;"></i>
+            <div class="hud-font" style="font-size: 0.7rem; color: var(--gold); margin-bottom: 10px; letter-spacing: 2px;">#01 // DIVINE</div>
+            <div class="user-name" style="justify-content: center; font-weight: 800; font-size: 1.3rem;">{{ leaderboard[0].username }}</div>
+            <div class="hud-font" style="color: var(--gold); text-align: center; font-size: 1.7rem; font-weight: 900; margin-top: 15px; text-shadow: 0 0 12px rgba(255,215,0,0.4);">{{ (leaderboard[0].avg_score)|round(1) }}%</div>
+        </div>
+        {% endif %}
+
+        {% if leaderboard|length >= 3 %}
+        <div class="podium-card rank-3 animate__animated animate__fadeInRight">
+            <div class="hud-font" style="font-size: 0.7rem; color: #cd7f32; margin-bottom: 10px; letter-spacing: 2px;">#03 // BRONZE</div>
+            <div class="user-name" style="justify-content: center; font-size: 1.1rem;">{{ leaderboard[2].username }}</div>
+            <div class="hud-font" style="color: #cd7f32; text-align: center; font-size: 1.3rem; font-weight: 700; margin-top: 15px; text-shadow: 0 0 8px rgba(205,127,50,0.3);">{{ (leaderboard[2].avg_score)|round(1) }}%</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="rank-list">
+        {% for user in leaderboard %}
+        <div class="rank-item {{ 'user-self' if user.username == session.get('username') }} animate__animated animate__fadeInUp" style="animation-delay: {{ loop.index * 0.05 }}s">
+            <div class="rank-number">#{{ "%02d" | format(loop.index) }}</div>
+            <div class="user-name">
+                {{ user.username }}
+                {% if user.avg_score >= 85 %}
+                <span class="badge-pill badge-divine" style="font-size: 0.55rem; padding: 2px 6px;">👑</span>
+                {% endif %}
+            </div>
+            <div class="user-score">{{ (user.avg_score)|round(1) }}%</div>
+            <div class="verified-tag"><i class="fa-solid fa-check-double"></i></div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

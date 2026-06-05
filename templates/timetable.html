@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 📅 HYBRID SCHEDULER ARCHITECTURE */
+    .timetable-wrapper {
+        max-width: 1000px;
+        margin: 0 auto;
+        animation: animate__animated animate__fadeIn;
+        width: 100%;
+        padding: 0 10px;
+    }
+
+    .input-card { 
+        background: var(--glass); 
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+        border-radius: 24px; 
+        padding: clamp(20px, 5vw, 40px); 
+        margin-bottom: 30px; 
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 242, 255, 0.15);
+        position: relative;
+    }
+
+    .input-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(188,19,254,0.18));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+    
+    /* 🎛️ RESPONSIVE INPUT GRID */
+    .slot-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+        gap: clamp(15px, 3vw, 25px); 
+    }
+    
+    /* 📜 TIMELINE RESULT */
+    .timetable-result { display: none; margin-top: 30px; }
+
+    .time-row { 
+        display: flex; 
+        flex-direction: row; 
+        align-items: center; 
+        padding: clamp(15px, 2.5vw, 22px) clamp(15px, 3vw, 30px); 
+        border-bottom: 1px solid rgba(255,255,255,0.04); 
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+    }
+
+    .time-val { 
+        min-width: 110px; 
+        color: var(--neon-blue); 
+        font-weight: 800; 
+        font-family: 'Orbitron', sans-serif; 
+        font-size: 0.95rem;
+        text-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+    }
+
+    .task-val { 
+        flex: 1; 
+        padding-left: clamp(10px, 3vw, 25px); 
+    }
+
+    .task-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+        font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+        color: #ffffff;
+        margin-bottom: 4px;
+    }
+
+    /* 📱 MOBILE OPTIMIZATIONS */
+    @media (max-width: 768px) {
+        .time-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+        .time-val { border-bottom: 1px solid rgba(0, 242, 255, 0.25); padding-bottom: 4px; width: auto; min-width: auto; }
+        .task-val { padding-left: 0; }
+        .slot-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 480px) {
+        .slot-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 1024px) {
+        .time-row:hover { 
+            background: rgba(0, 242, 255, 0.04); 
+            transform: translateX(10px); 
+            border-bottom-color: rgba(0, 242, 255, 0.2);
+        }
+    }
+</style>
+
+<div class="timetable-wrapper">
+    <div id="input-section" class="input-card">
+        <h2 class="divine-heading" style="font-size: 1.8rem; margin-bottom: 10px; text-align: left;">MISSION SCHEDULER</h2>
+        <p class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); opacity: 0.8; margin-bottom: 35px; letter-spacing: 2px;">CALIBRATE DAILY TRAJECTORY CYCLES</p>
+        
+        <div class="slot-grid">
+            <div><label class="hud-font" style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 1.5px; display: block; margin-bottom: 8px;">WAKE UP</label><input type="time" id="wake_up" class="input-slot"></div>
+            <div><label class="hud-font" style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 1.5px; display: block; margin-bottom: 8px;">SCHOOL START</label><input type="time" id="s_start" class="input-slot"></div>
+            <div><label class="hud-font" style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 1.5px; display: block; margin-bottom: 8px;">SCHOOL END</label><input type="time" id="s_end" class="input-slot"></div>
+            <div>
+                <label class="hud-font" style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 1.5px; display: block; margin-bottom: 8px;">COACHING?</label>
+                <select id="has_coaching" class="input-slot" onchange="toggleCoaching()">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+            </div>
+            <div id="coaching_div" style="display:none; grid-column: span 2;">
+                <label class="hud-font" style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 1.5px; display: block; margin-bottom: 8px;">COACHING TIME SLOT</label>
+                <input type="text" id="c_time" class="input-slot" placeholder="e.g. 4PM - 6PM">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label class="hud-font" style="font-size: 0.6rem; opacity: 0.5; letter-spacing: 1.5px; display: block; margin-bottom: 8px;">SPECIAL MISSION OBJECTIVE</label>
+                <input type="text" id="s_task" class="input-slot" placeholder="e.g. Science Board practice, Physics revision...">
+            </div>
+        </div>
+        
+        <button onclick="generateSchedule()" class="btn-divine" style="width: 100%; margin-top: 35px; border-radius: 12px; padding: 18px;">
+            GENERATE AI STRATEGY 🚀
+        </button>
+    </div>
+
+    <div id="timetable-result" class="timetable-result animate__animated animate__zoomIn">
+        <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 20px;">
+            <div class="hud-font" style="background: linear-gradient(135deg, var(--divine-purple), var(--neon-blue)); color: #ffffff; padding: 18px; font-weight: 800; text-align: center; letter-spacing: 3px; font-size: 0.85rem; text-shadow: 0 0 10px rgba(0,242,255,0.4);">
+                TOMORROW'S COMBAT PLAN
+            </div>
+            <div id="schedule-list"></div>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap;">
+            <button onclick="window.print()" class="btn-divine" style="flex: 1; padding: 15px;">DOWNLOAD PDF 📄</button>
+            <button onclick="location.reload()" class="btn-divine" style="flex: 1; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); padding: 15px;">RE-CALIBRATE</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleCoaching() {
+        const val = document.getElementById('has_coaching').value;
+        document.getElementById('coaching_div').style.display = (val === 'Yes') ? 'block' : 'none';
+    }
+
+    async function generateSchedule() {
+        const payload = {
+            wake_up: document.getElementById('wake_up').value,
+            school_start: document.getElementById('s_start').value,
+            school_end: document.getElementById('s_end').value,
+            has_coaching: document.getElementById('has_coaching').value,
+            coaching_time: document.getElementById('c_time').value,
+            special_task: document.getElementById('s_task').value
+        };
+
+        const inputSec = document.getElementById('input-section');
+        inputSec.innerHTML = `
+            <div style="text-align:center; padding: 60px;">
+                <i class="fa-solid fa-brain fa-spin" style="font-size: 4rem; color: var(--neon-blue); margin-bottom: 25px; filter: drop-shadow(0 0 15px var(--neon-blue));"></i>
+                <h3 class="divine-heading" style="font-size: 1.3rem;">AI OPTIMIZING NEURAL CYCLES...</h3>
+            </div>`;
+
+        try {
+            const res = await fetch('/generate_timetable', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            
+            inputSec.style.display = 'none';
+            document.getElementById('timetable-result').style.display = 'block';
+            
+            const list = document.getElementById('schedule-list');
+            list.innerHTML = "";
+            data.forEach((item, index) => {
+                list.innerHTML += `
+                    <div class="time-row animate__animated animate__fadeInUp" style="animation-delay: ${index * 0.04}s">
+                        <div class="time-val">${item.time}</div>
+                        <div class="task-val">
+                            <div class="task-title">${item.task}</div>
+                            <div style="font-size: 0.9rem; opacity: 0.5; font-family: 'Outfit'; color: #ccd6f6;">${item.detail}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        } catch (e) {
+            alert("ALERT: Neural Link Interrupted! Re-calculating...");
+            location.reload();
+        }
+    }
+</script>
+{% endblock %}

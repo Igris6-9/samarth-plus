@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* 🛡️ HYBRID LOGIN TERMINAL ARCHITECTURE */
+    .login-wrapper {
+        min-height: 80vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .login-card {
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        padding: clamp(30px, 5vw, 50px);
+        width: 100%;
+        max-width: 460px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 242, 255, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent, rgba(0,242,255,0.2));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    /* ⚡ SCANLINE ANIMATION */
+    .login-card::after {
+        content: "";
+        position: absolute;
+        top: -100%; left: 0;
+        width: 100%; height: 100%;
+        background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.04), transparent);
+        animation: scanMove 5s linear infinite;
+        pointer-events: none;
+    }
+
+    @keyframes scanMove {
+        0% { top: -100%; }
+        100% { top: 100%; }
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .login-header h2 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(1.5rem, 5vw, 2.2rem);
+        letter-spacing: 3px;
+        color: #ffffff;
+        background: linear-gradient(135deg, #ffffff, var(--neon-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 15px rgba(0, 242, 255, 0.25);
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+        position: relative;
+    }
+
+    .form-group i {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--neon-blue);
+        font-size: 1.1rem;
+        opacity: 0.8;
+        filter: drop-shadow(0 0 5px rgba(0, 242, 255, 0.4));
+    }
+
+    .login-input {
+        width: 100%;
+        background: rgba(8, 8, 16, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 16px 18px 16px 52px;
+        border-radius: 12px;
+        color: white;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        outline: none;
+        transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .login-input:focus {
+        border-color: var(--neon-blue);
+        background: rgba(0, 242, 255, 0.04);
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .auth-footer a {
+        color: var(--neon-blue);
+        text-decoration: none;
+        font-weight: 700;
+        margin-left: 8px;
+        text-shadow: 0 0 5px rgba(0, 242, 255, 0.2);
+        transition: 0.3s;
+    }
+
+    .auth-footer a:hover {
+        color: #fff;
+        text-shadow: 0 0 10px var(--neon-blue);
+    }
+
+    .flash-msg {
+        background: rgba(255, 0, 85, 0.08);
+        color: var(--neon-red);
+        border: 1px solid rgba(255, 0, 85, 0.3);
+        padding: 14px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.75rem;
+        text-align: center;
+        letter-spacing: 1.5px;
+        box-shadow: 0 0 10px rgba(255, 0, 85, 0.05);
+    }
+
+    @media (max-height: 600px) {
+        .login-wrapper { min-height: 90vh; padding: 10px; }
+        .login-card { padding: 30px 20px; }
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-card animate__animated animate__zoomIn">
+        <div class="login-header">
+            <div style="position: relative; display: inline-block; margin-bottom: 20px;">
+                <i class="fa-solid fa-shield-halved" style="font-size: clamp(2.5rem, 8vw, 3.5rem); color: var(--neon-blue); filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.5));"></i>
+                <div class="animate__animated animate__pulse animate__infinite" style="position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; background: var(--matrix-green); border-radius: 50%; box-shadow: 0 0 10px var(--matrix-green);"></div>
+            </div>
+            <h2>CADET LOGIN</h2>
+            <p class="hud-font" style="font-size: 0.65rem; color: var(--neon-blue); letter-spacing: 3px; opacity: 0.7; margin-top: 5px;">RESTRICTED ACCESS // LEVEL 1</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="flash-msg animate__animated animate__shakeX">>> [ALERT]: {{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <i class="fa-solid fa-user-ninja"></i>
+                <input type="email" name="email" class="login-input" placeholder="EMAIL ADDRESS" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <i class="fa-solid fa-fingerprint"></i>
+                <input type="password" name="password" class="login-input" placeholder="ACCESS CODE" required>
+            </div>
+
+            <button type="submit" class="btn-divine" style="width: 100%; padding: 18px; font-size: 0.95rem; border-radius: 12px; margin-top: 10px;">
+                INITIALIZE ACCESS 🚀
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            NEW CADET? <a href="/register">CREATE IDENTITY</a>
+        </div>
+        
+        <div class="hud-font" style="margin-top: 35px; opacity: 0.2; font-size: 0.55rem; text-align: center; letter-spacing: 4px;">
+            SECURED BY DAKASH DIVINE CORE // V3.0
+        </div>
+    </div>
+</div>
+{% endblock %}
