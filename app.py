@@ -39,10 +39,17 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'login'
     login_manager.login_message_category = "info"
+    # ✅ Keep session fresh — prevents auto-logout on Vercel serverless
+    login_manager.refresh_view = 'login'
+    login_manager.needs_refresh_message = ""
+    login_manager.session_protection = "basic"  # 'strong' causes logout on IP change (Vercel)
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(User, int(user_id))
+        try:
+            return db.session.get(User, int(user_id))
+        except Exception:
+            return None
 
     # --- 🛰️ THE MASTER DIVINE ROUTING ENGINE ---
 
@@ -62,11 +69,13 @@ def create_app():
             user = User.query.filter_by(email=email_input).first()
             
             if user and check_password_hash(user.password_hash, password_input):
+                # ✅ remember=True sets a long-lived cookie (30 days)
                 login_user(user, remember=True)
+                # ✅ Make session permanent (7 days)
                 session.permanent = True
-                # Session fix for practice/quiz tracking
-                session['user_id'] = user.id 
+                session['user_id'] = user.id
                 session['username'] = user.username
+                session.modified = True
                 print(f">> [SYSTEM]: Cadet {user.username} is now ONLINE.")
                 return redirect(url_for('dashboard'))
                 

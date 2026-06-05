@@ -1,32 +1,28 @@
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
-# Local testing ke liye .env se variables load karta hai
-# Production/Deployment par ye silently bypass ho jayega
 load_dotenv()
 
 def _get_db_uri():
     """
     Smart DB URI resolver:
-    1. DATABASE_URL env var (Postgres/MySQL for production) — highest priority
+    1. DATABASE_URL env var (Postgres for production) — highest priority
     2. Vercel serverless: /tmp folder (only writable dir on Vercel)
     3. Local dev: instance/ folder (SQLite)
     """
-    # Production database (Postgres etc.)
     if os.environ.get('DATABASE_URL'):
         url = os.environ.get('DATABASE_URL')
-        # Fix for older Heroku/Render postgres URLs (postgres:// -> postgresql://)
+        # Fix for older postgres:// URLs -> postgresql://
         if url.startswith('postgres://'):
             url = url.replace('postgres://', 'postgresql://', 1)
         return url
 
-    # Vercel serverless: only /tmp is writable
     if os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV'):
         db_path = '/tmp/samarth_v2.db'
         print(f">> [VERCEL MODE]: Using /tmp SQLite DB at {db_path}")
         return f'sqlite:///{db_path}'
 
-    # Local development: use instance/ folder
     base_dir = os.path.abspath(os.path.dirname(__file__))
     instance_dir = os.path.join(base_dir, 'instance')
     os.makedirs(instance_dir, exist_ok=True)
@@ -39,47 +35,58 @@ class Config:
     Optimized for Vercel Serverless & Secure Cloud Deployment.
     """
 
-    # 🔐 FLASK SECURITY (Neural Link Encryption)
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'DAKASH_DIVINE_KEY_777_X')
+    # 🔐 FLASK SECURITY — MUST be set in Vercel env vars for session persistence!
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'DAKASH_DIVINE_KEY_777_STATIC_FIXED')
 
-    # 🧠 AI CORE: GEMINI API KEY (Guarded)
+    # 🧠 AI CORE
     GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-    # 📂 DATABASE ARCHITECTURE — Smart resolver above handles all environments
+    # 📂 DATABASE
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     SQLALCHEMY_DATABASE_URI = _get_db_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Prevent SQLAlchemy connection pool issues on serverless
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 280,
+    }
 
-    # 🚀 GLOBAL APP SETTINGS
+    # 🚀 APP SETTINGS
     DEBUG = os.environ.get('DEBUG', 'True') == 'True'
     PROJECT_NAME = "SAMARTH"
     VERSION = "2.5.0"
 
     # 📁 ASSET MANAGEMENT
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB Buffer
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 
-    # 🛡️ SESSION SECURITY (PC/Mobile Protection)
+    # 🛡️ SESSION SETTINGS — Critical for Vercel login persistence
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SECURE = os.environ.get('SESSION_SECURE', 'False') == 'True'
-    PERMANENT_SESSION_LIFETIME = 604800  # 7 Days
+    SESSION_COOKIE_SAMESITE = 'Lax'          # ✅ Fixes cross-request session loss
+    SESSION_COOKIE_NAME = 'samarth_session'  # ✅ Fixed name prevents conflicts
+    PERMANENT_SESSION_LIFETIME = timedelta(days=7)  # ✅ timedelta not int
+
+    # Only force Secure cookies on HTTPS (Vercel is HTTPS, local is HTTP)
+    SESSION_COOKIE_SECURE = os.environ.get('VERCEL_ENV') is not None
+
+    # ✅ REMEMBER ME COOKIE — stays even after browser close
+    REMEMBER_COOKIE_DURATION = timedelta(days=30)
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SECURE = os.environ.get('VERCEL_ENV') is not None
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
 
     @staticmethod
     def init_app(app):
-        """
-        Engine Guard: Initialization checks before launch.
-        """
-        # Ensure 'uploads' folder exists (only on non-serverless)
         try:
             os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
         except OSError:
-            pass  # Vercel read-only filesystem - skip silently
+            pass
 
-        # 🛡️ API KEY GUARD
         if not Config.GEMINI_API_KEY:
-            print(">> [CRITICAL ERROR]: GEMINI_API_KEY is not set in Environment Variables!")
+            print(">> [CRITICAL ERROR]: GEMINI_API_KEY is not set!")
         else:
             print(f">> [DAKASH-ENGINE]: Neural Link Established (Gemini V{Config.VERSION}). 🚀")
 
         print(f">> [SYSTEM]: Environment: {'Development' if Config.DEBUG else 'Production'}")
-        print(f">> [DATABASE]: Using URI: {Config.SQLALCHEMY_DATABASE_URI[:40]}...")
+        print(f">> [DATABASE]: {Config.SQLALCHEMY_DATABASE_URI[:50]}...")
+        print(f">> [SESSION]: Cookie Secure={Config.SESSION_COOKIE_SECURE}, SameSite={Config.SESSION_COOKIE_SAMESITE}")
