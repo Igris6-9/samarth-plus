@@ -97,7 +97,9 @@ def create_app():
                 return redirect(url_for('login'))
             except Exception as e:
                 db.session.rollback()
-                flash('Database Error!', 'danger')
+                import traceback
+                print(f">> [REGISTER ERROR]: {traceback.format_exc()}")
+                flash(f'Registration failed. Please try again.', 'danger')
 
         return render_template('register.html')
 
@@ -627,6 +629,30 @@ def create_app():
             print(">> [DATABASE]: Neural Database Synced. System is 100% Divine.")
         except Exception as db_err:
             print(f">> [DATABASE]: Table sync skipped or warning: {db_err}")
+
+    # 🛸 VERCEL COLD START FIX: Ensure DB tables exist on every serverless boot
+    @app.before_request
+    def ensure_db_tables():
+        try:
+            db.create_all()
+        except Exception:
+            pass  # Tables already exist — safe to ignore
+
+    # 🛡️ GLOBAL ERROR HANDLER: Show proper error instead of blank 500
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        import traceback
+        print(f">> [500 ERROR]: {traceback.format_exc()}")
+        return render_template('404.html',
+                               error_code=500,
+                               error_message="Internal Server Error — DAKASH Engine is rebooting!"), 500
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return render_template('404.html',
+                               error_code=404,
+                               error_message="Page not found in the Neural Grid!"), 404
 
     return app
 
