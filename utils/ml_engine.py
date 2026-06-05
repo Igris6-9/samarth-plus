@@ -1,17 +1,22 @@
 import os
 import numpy as np
 from sklearn.linear_model import LinearRegression
-import google.generativeai as genai
+
+# ✅ NEW SDK
+from google import genai
 from dotenv import load_dotenv
 import logging
 
-# .env se keys load karo
 load_dotenv()
 
-# 👑 DAKASH ML-ENGINE: HYBRID PREDICTIVE ANALYTICS (GEMINI UPGRADE)
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+GEMINI_MODEL = "gemini-1.5-flash"
+
+def _get_client():
+    """Lazily get Gemini client for Vercel compatibility."""
+    api_key = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY is not set")
+    return genai.Client(api_key=api_key)
 
 class DakashPredictor:
     def __init__(self):
@@ -33,11 +38,11 @@ class DakashPredictor:
         Avoid military jargon. Refer to the user as a student.
         """
         try:
-            if not GEMINI_API_KEY:
-                raise ValueError("GEMINI_API_KEY is not set")
-            
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(prompt)
+            client = _get_client()
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt
+            )
             return response.text.strip()
         except:
             return "Neural Link unstable, par Cadet tu rukk mat. Practice jaari rakh! 🛡️"

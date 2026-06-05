@@ -1,7 +1,7 @@
 Flask
 Flask-SQLAlchemy
 Flask-Login
-google-generativeai
+google-genai
 matplotlib
 scikit-learn
 numpy

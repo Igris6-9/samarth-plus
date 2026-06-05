@@ -2,20 +2,24 @@ import os
 import json
 import re
 import logging
-import google.generativeai as genai
+
+# ✅ NEW SDK - google.genai (replaces deprecated google.generativeai)
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 # Load environment keys
 load_dotenv()
 
-# 👑 DAKASH ENGINE - HYBRID QUIZ CORE (GEMINI UPGRADE)
-# Try both env sources (Vercel sets them directly without .env)
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-
-# ✅ Correct model name (gemini-1.5-flash = fast + free tier)
+# ✅ Correct model name
 GEMINI_MODEL = "gemini-1.5-flash"
+
+def _get_client():
+    """Lazily get Gemini client — reads API key fresh every call for Vercel compatibility."""
+    api_key = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY is not set in environment variables")
+    return genai.Client(api_key=api_key)
 
 def clean_response_text(text: str) -> str:
     # Removes raw math dollar signs and handles technical symbols
@@ -452,18 +456,18 @@ def generate_cbse_quiz(subject, difficulty, class_level="10", exam_track=None, c
         """
 
     try:
-        if not GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is not set")
+        # Get fresh client (lazy init for Vercel)
+        client = _get_client()
 
-        # Configure Gemini JSON Mode
-        model = genai.GenerativeModel(GEMINI_MODEL)
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
+        # Call Gemini with JSON response mode
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 response_mime_type="application/json"
             )
         )
-        
+
         if not response or not response.text:
             logging.error(">> [ERROR]: Gemini AI core returned null.")
             return get_mock_quiz_questions(subject, class_level)

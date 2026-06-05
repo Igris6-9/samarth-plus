@@ -2,17 +2,23 @@ import os
 import json
 import re
 import logging
-import google.generativeai as genai
+
+# ✅ NEW SDK
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from flask import session
 
-# .env se keys load karo
 load_dotenv()
 
-# 👑 DAKASH ENGINE - HYBRID GENERATIVE AI CONFIG (GEMINI UPGRADE)
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+GEMINI_MODEL = "gemini-1.5-flash"
+
+def _get_client():
+    """Lazily get Gemini client for Vercel compatibility."""
+    api_key = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY is not set")
+    return genai.Client(api_key=api_key)
 
 def clean_response_text(text: str) -> str:
     text = text.replace(r"\rightarrow", "→")
@@ -75,14 +81,13 @@ def generate_practice_paper(data):
     """
 
     try:
-        if not GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is not set")
+        client = _get_client()
 
-        # Configure Gemini JSON Mode
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
+        # Call Gemini with JSON response mode
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 response_mime_type="application/json"
             )
         )
